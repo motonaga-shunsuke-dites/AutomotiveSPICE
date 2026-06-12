@@ -1,42 +1,38 @@
 @echo off
-chcp 65001 > nul
-echo ============================================
-echo  ASPICE Doc Tool — セットアップ
-echo ============================================
-echo.
-
 cd /d "%~dp0"
 
-:: Node.js チェック
+echo ============================================
+echo  ASPICE Doc Tool - Setup
+echo ============================================
+echo.
+
 where node >nul 2>&1
 if %errorlevel% neq 0 (
-  echo [エラー] Node.js が見つかりません。
-  echo  https://nodejs.org/ からインストールしてください。
+  echo [ERROR] Node.js not found.
+  echo  Please install from https://nodejs.org/
   pause
   exit /b 1
 )
 
-echo [1/3] 依存パッケージをインストール中...
+echo [1/3] Installing npm packages...
 call npm install
 if %errorlevel% neq 0 (
-  echo [エラー] npm install に失敗しました。
+  echo [ERROR] npm install failed.
   pause
   exit /b 1
 )
 
-echo [2/3] デスクトップショートカットを作成中...
+echo [2/3] Creating desktop shortcut...
 set SCRIPT_DIR=%~dp0
 set SHORTCUT=%USERPROFILE%\Desktop\ASPICE Doc Tool.lnk
-powershell -NoProfile -Command ^
-  "$ws=New-Object -ComObject WScript.Shell; $s=$ws.CreateShortcut('%SHORTCUT%'); $s.TargetPath='%SCRIPT_DIR%launch.bat'; $s.WorkingDirectory='%SCRIPT_DIR%'; $s.IconLocation='%SystemRoot%\System32\shell32.dll,13'; $s.Description='ASPICE Document Editor & Viewer'; $s.Save()"
-echo  → デスクトップに「ASPICE Doc Tool」ショートカットを作成しました
+powershell -NoProfile -Command "$ws=New-Object -ComObject WScript.Shell; $s=$ws.CreateShortcut('%SHORTCUT%'); $s.TargetPath='%SCRIPT_DIR%launch.bat'; $s.WorkingDirectory='%SCRIPT_DIR%'; $s.IconLocation='%SystemRoot%\System32\shell32.dll,13'; $s.Description='ASPICE Document Editor & Viewer'; $s.Save()"
+echo  -> Desktop shortcut "ASPICE Doc Tool" created.
 
-echo [3/3] セットアップ完了！
+echo [3/3] Setup complete!
 echo.
-echo 使い方:
-echo  1. デスクトップの「ASPICE Doc Tool」をダブルクリック
-echo  2. タスクバーにピンして使う場合はショートカットを右クリック→タスクバーにピン
-echo  3. ブラウザのブックマークに http://localhost:3000 を登録する場合は
-echo     先に launch.bat を実行してからブックマーク登録してください
+echo Usage:
+echo  1. Double-click "ASPICE Doc Tool" on the Desktop
+echo  2. To pin to taskbar: right-click the shortcut -> Pin to taskbar
+echo  3. To bookmark in browser: run launch.bat first, then bookmark http://localhost:3000
 echo.
 pause
