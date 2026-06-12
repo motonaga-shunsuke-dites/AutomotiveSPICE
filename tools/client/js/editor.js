@@ -104,7 +104,8 @@ function createNewDocument(id, typeKey) {
     version: '1.0', status: 'Draft',
     created: new Date().toISOString().slice(0,10),
     author: '', approver: '', upstream: [], downstream: [],
-    content: {}, changelog: []
+    content: { title: s.label, version: '1.0', status: 'Draft' },
+    changelog: []
   };
   currentSchema = s;
   undo.clear();
