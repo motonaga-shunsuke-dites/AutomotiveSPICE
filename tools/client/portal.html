@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ASPICE Doc Tool — Portal</title>
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<nav class="navbar">
+  <span class="navbar-brand">📋 ASPICE Doc Tool</span>
+  <div class="nav-links">
+    <a href="/"               class="nav-link active">Portal</a>
+    <a href="/editor"         class="nav-link">Editor</a>
+    <a href="/viewer"         class="nav-link">Viewer</a>
+    <a href="/traceability"   class="nav-link">Traceability</a>
+  </div>
+  <div class="nav-workspace">
+    <span id="wsLabel">ワークスペース未設定</span>
+    <button class="btn btn-sm btn-secondary" onclick="openWsModal()">設定</button>
+  </div>
+</nav>
+
+<div class="main" style="overflow-y:auto;">
+  <div class="main-header">
+    <span class="main-title">プロセス概要</span>
+    <input id="searchInput" class="sidebar-search" style="width:240px" placeholder="ドキュメント検索…" oninput="filterDocs(this.value)">
+    <button class="btn btn-primary" onclick="openNewDocModal()">＋ 新規作成</button>
+  </div>
+  <div class="main-body">
+    <div id="portalGrid" class="portal-grid"></div>
+  </div>
+</div>
+
+<!-- ワークスペース設定モーダル -->
+<div id="wsModal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <h2>ワークスペース設定</h2>
+    <p>ドキュメントを保存するフォルダのフルパスを入力してください。<br>初回のみ設定が必要です。</p>
+    <div class="form-field">
+      <label>ドキュメントフォルダ (絶対パス)</label>
+      <input id="wsPathInput" type="text" placeholder="例: C:\Projects\MyProject\documents">
+    </div>
+    <div class="form-field">
+      <label>プロジェクト ID</label>
+      <input id="wsProjectId" type="text" placeholder="例: PRJ001" value="PRJ001">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeWsModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveWorkspace()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 新規作成モーダル -->
+<div id="newDocModal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <h2>新規ドキュメント作成</h2>
+    <div id="doctypeGrid" class="doctype-grid"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeNewDocModal()">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/portal.js"></script>
+</body>
+</html>

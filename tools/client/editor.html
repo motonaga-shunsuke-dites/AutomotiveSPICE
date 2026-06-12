@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ASPICE Doc Tool — Editor</title>
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<nav class="navbar">
+  <span class="navbar-brand">📋 ASPICE Doc Tool</span>
+  <div class="nav-links">
+    <a href="/"             class="nav-link">Portal</a>
+    <a href="/editor"       class="nav-link active">Editor</a>
+    <a href="/viewer"       class="nav-link">Viewer</a>
+    <a href="/traceability" class="nav-link">Traceability</a>
+  </div>
+  <div class="nav-workspace" style="gap:6px">
+    <button id="undoBtn"  class="btn btn-ghost btn-icon" title="元に戻す (Ctrl+Z)"  onclick="doUndo()" disabled>↩</button>
+    <button id="redoBtn"  class="btn btn-ghost btn-icon" title="やり直し (Ctrl+Y)" onclick="doRedo()" disabled>↪</button>
+    <button id="saveBtn"  class="btn btn-primary btn-sm" onclick="saveDoc()">保存</button>
+    <button id="deleteBtn" class="btn btn-danger btn-sm" onclick="deleteDoc()" style="display:none">削除</button>
+  </div>
+</nav>
+
+<div class="layout">
+  <!-- サイドバー: ドキュメントツリー -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <input id="sideSearch" class="sidebar-search" placeholder="ドキュメント検索…" oninput="filterSidebar(this.value)">
+      <button class="btn btn-primary btn-sm" style="width:100%" onclick="openNewDocModal()">＋ 新規作成</button>
+    </div>
+    <div id="sidebarBody" class="sidebar-body"></div>
+  </aside>
+
+  <!-- メインエリア: エディター -->
+  <div class="main">
+    <div class="main-header">
+      <div style="display:flex;flex-direction:column;gap:2px;flex:1">
+        <span id="docId" style="font-size:11px;color:var(--text-dim)"></span>
+        <span id="docTitle" class="main-title">ドキュメントを選択してください</span>
+      </div>
+      <span id="docBadge" class="badge"></span>
+    </div>
+    <div id="editorMain" class="main-body">
+      <div class="empty-state">
+        <div class="icon">📄</div>
+        <p>左のサイドバーからドキュメントを選ぶか、新規作成してください</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 新規作成モーダル -->
+<div id="newDocModal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <h2>新規ドキュメント作成</h2>
+    <div id="doctypeGrid" class="doctype-grid"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeNewDocModal()">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/undoManager.js"></script>
+<script src="/js/editor.js"></script>
+</body>
+</html>

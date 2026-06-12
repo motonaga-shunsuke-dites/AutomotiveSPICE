@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ASPICE Doc Tool — Viewer</title>
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<nav class="navbar">
+  <span class="navbar-brand">📋 ASPICE Doc Tool</span>
+  <div class="nav-links">
+    <a href="/"             class="nav-link">Portal</a>
+    <a href="/editor"       class="nav-link">Editor</a>
+    <a href="/viewer"       class="nav-link active">Viewer</a>
+    <a href="/traceability" class="nav-link">Traceability</a>
+  </div>
+  <div class="nav-workspace">
+    <button id="editBtn" class="btn btn-sm btn-secondary" style="display:none" onclick="openEditor()">編集</button>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <input id="sideSearch" class="sidebar-search" placeholder="ドキュメント検索…" oninput="filterSidebar(this.value)">
+    </div>
+    <div id="sidebarBody" class="sidebar-body"></div>
+  </aside>
+
+  <div class="main">
+    <div id="viewerHeader" class="main-header" style="display:none">
+      <div style="flex:1">
+        <div id="vDocId" style="font-size:11px;color:var(--text-dim)"></div>
+        <div id="vDocTitle" class="main-title"></div>
+      </div>
+      <span id="vDocBadge" class="badge"></span>
+      <span id="vDocMeta" style="font-size:12px;color:var(--text-dim)"></span>
+    </div>
+    <div class="main-body">
+      <div id="viewerContent" class="viewer-content">
+        <div class="empty-state"><div class="icon">👁</div><p>左のサイドバーからドキュメントを選択してください</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/viewer.js"></script>
+</body>
+</html>

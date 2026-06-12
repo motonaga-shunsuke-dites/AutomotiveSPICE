@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ASPICE Doc Tool — Traceability</title>
+<link rel="stylesheet" href="/css/styles.css">
+<style>
+  .impact-panel { position: fixed; right: 0; top: var(--nav-h); bottom: 0; width: 320px; background: var(--surface); border-left: 1px solid var(--orange); padding: 16px; transform: translateX(100%); transition: transform 0.25s; overflow-y: auto; z-index: 50; }
+  .impact-panel.open { transform: translateX(0); }
+  .impact-panel h3 { color: var(--orange); margin-bottom: 12px; }
+  .impact-item { padding: 8px 10px; border-radius: 6px; background: var(--surface2); margin-bottom: 6px; cursor: pointer; font-size: 13px; }
+  .impact-item:hover { border-left: 3px solid var(--orange); }
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <span class="navbar-brand">📋 ASPICE Doc Tool</span>
+  <div class="nav-links">
+    <a href="/"             class="nav-link">Portal</a>
+    <a href="/editor"       class="nav-link">Editor</a>
+    <a href="/viewer"       class="nav-link">Viewer</a>
+    <a href="/traceability" class="nav-link active">Traceability</a>
+  </div>
+  <div class="nav-workspace">
+    <button class="btn btn-sm btn-secondary" onclick="loadMatrix()">更新</button>
+  </div>
+</nav>
+
+<div class="main" style="overflow:hidden">
+  <div class="main-header">
+    <span class="main-title">トレーサビリティマトリクス</span>
+    <span style="font-size:12px;color:var(--text-dim)">ドキュメントをクリックすると影響範囲を表示します</span>
+    <button id="closeImpact" class="btn btn-ghost btn-sm" style="display:none" onclick="closeImpactPanel()">影響範囲を閉じる</button>
+  </div>
+  <div class="main-body" style="overflow:auto;padding:0">
+    <div id="matrixContainer" class="trace-matrix" style="padding:20px">
+      <div class="empty-state"><div class="icon">🕸</div><p>読み込み中…</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- 影響範囲パネル -->
+<div id="impactPanel" class="impact-panel">
+  <h3>⚠ 影響範囲</h3>
+  <div id="impactSource" style="font-size:12px;color:var(--text-dim);margin-bottom:12px"></div>
+  <div id="impactList"></div>
+  <p id="impactEmpty" style="color:var(--text-dim);font-size:13px;display:none">影響を受けるドキュメントはありません</p>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/traceability.js"></script>
+</body>
+</html>

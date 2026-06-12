@@ -1,0 +1,401 @@
+{
+  "SWE1_SRS": {
+    "label": "ソフトウェア要件仕様書",
+    "process": "SWE1",
+    "idPrefix": "SRS",
+    "sections": [
+      {
+        "id": "header", "title": "基本情報",
+        "fields": [
+          { "id": "title",    "label": "タイトル",  "type": "text", "required": true },
+          { "id": "version",  "label": "バージョン","type": "text" },
+          { "id": "status",   "label": "ステータス","type": "select", "options": ["Draft","Under Review","Approved"] },
+          { "id": "author",   "label": "作成者",    "type": "text" },
+          { "id": "approver", "label": "承認者",    "type": "text" }
+        ]
+      },
+      {
+        "id": "purpose", "title": "目的・スコープ",
+        "fields": [
+          { "id": "purpose",    "label": "目的",    "type": "textarea" },
+          { "id": "scope",      "label": "スコープ","type": "textarea" },
+          { "id": "outOfScope", "label": "対象外",  "type": "textarea" }
+        ]
+      },
+      {
+        "id": "requirements", "title": "機能要件", "type": "itemList",
+        "itemFields": [
+          { "id": "id",          "label": "ID",       "type": "text", "placeholder": "SWR-001" },
+          { "id": "title",       "label": "タイトル", "type": "text" },
+          { "id": "description", "label": "説明",     "type": "textarea" },
+          { "id": "priority",    "label": "優先度",   "type": "select", "options": ["Must","Should","Nice-to-have"] },
+          { "id": "source",      "label": "根拠",     "type": "text", "placeholder": "SYS-001" },
+          { "id": "acceptance",  "label": "受入基準", "type": "textarea" },
+          { "id": "status",      "label": "状態",     "type": "select", "options": ["Draft","Agreed","Deleted"] }
+        ]
+      },
+      {
+        "id": "nfRequirements", "title": "非機能要件", "type": "itemList",
+        "itemFields": [
+          { "id": "id",          "label": "ID",     "type": "text", "placeholder": "SWR-N01" },
+          { "id": "category",    "label": "種別",   "type": "select", "options": ["性能","安全","セキュリティ","信頼性","保守性"] },
+          { "id": "description", "label": "要件",   "type": "textarea" },
+          { "id": "target",      "label": "目標値", "type": "text" },
+          { "id": "source",      "label": "根拠",   "type": "text" }
+        ]
+      },
+      {
+        "id": "issues", "title": "課題・懸念事項", "type": "itemList",
+        "itemFields": [
+          { "id": "id",      "label": "課題ID",   "type": "text", "placeholder": "ISS-01" },
+          { "id": "content", "label": "内容",     "type": "textarea" },
+          { "id": "impact",  "label": "影響範囲", "type": "text" },
+          { "id": "owner",   "label": "担当者",   "type": "text" },
+          { "id": "status",  "label": "状態",     "type": "select", "options": ["Open","In Progress","Closed"] }
+        ]
+      }
+    ]
+  },
+  "SWE2_SAD": {
+    "label": "ソフトウェアアーキテクチャ設計書",
+    "process": "SWE2",
+    "idPrefix": "SAD",
+    "sections": [
+      {
+        "id": "header", "title": "基本情報",
+        "fields": [
+          { "id": "title",    "label": "タイトル",  "type": "text", "required": true },
+          { "id": "version",  "label": "バージョン","type": "text" },
+          { "id": "status",   "label": "ステータス","type": "select", "options": ["Draft","Under Review","Approved"] },
+          { "id": "author",   "label": "作成者",    "type": "text" },
+          { "id": "approver", "label": "承認者",    "type": "text" }
+        ]
+      },
+      {
+        "id": "overview", "title": "アーキテクチャ概要",
+        "fields": [
+          { "id": "policy",    "label": "設計方針",      "type": "textarea" },
+          { "id": "pattern",   "label": "採用パターン",  "type": "text" },
+          { "id": "contextDiagram", "label": "コンテキスト図 (テキスト)", "type": "textarea" }
+        ]
+      },
+      {
+        "id": "components", "title": "コンポーネント構成", "type": "itemList",
+        "itemFields": [
+          { "id": "id",           "label": "ID",          "type": "text", "placeholder": "ARC-001" },
+          { "id": "name",         "label": "コンポーネント名","type": "text" },
+          { "id": "responsibility","label": "責務",        "type": "textarea" },
+          { "id": "relatedSWR",   "label": "担当 SWR",    "type": "text" },
+          { "id": "dependencies", "label": "依存関係",    "type": "text" },
+          { "id": "constraints",  "label": "制約",        "type": "textarea" }
+        ]
+      },
+      {
+        "id": "interfaces", "title": "インターフェース設計", "type": "itemList",
+        "itemFields": [
+          { "id": "id",        "label": "ID",      "type": "text", "placeholder": "IFC-001" },
+          { "id": "provider",  "label": "提供側",  "type": "text" },
+          { "id": "consumer",  "label": "消費側",  "type": "text" },
+          { "id": "operation", "label": "操作名",  "type": "text" },
+          { "id": "args",      "label": "引数・戻り値", "type": "textarea" },
+          { "id": "frequency", "label": "呼び出し頻度","type": "text" },
+          { "id": "error",     "label": "エラー処理","type": "textarea" }
+        ]
+      },
+      {
+        "id": "adr", "title": "設計決定 (ADR)", "type": "itemList",
+        "itemFields": [
+          { "id": "id",          "label": "ADR-ID",    "type": "text", "placeholder": "ADR-001" },
+          { "id": "title",       "label": "タイトル",  "type": "text" },
+          { "id": "context",     "label": "コンテキスト","type": "textarea" },
+          { "id": "decision",    "label": "決定内容",  "type": "textarea" },
+          { "id": "rationale",   "label": "採用理由",  "type": "textarea" },
+          { "id": "alternatives","label": "却下した代替案","type": "textarea" },
+          { "id": "status",      "label": "状態",      "type": "select", "options": ["Accepted","Deprecated","Superseded"] }
+        ]
+      }
+    ]
+  },
+  "SWE3_SDD": {
+    "label": "ソフトウェア詳細設計書",
+    "process": "SWE3",
+    "idPrefix": "SDD",
+    "sections": [
+      {
+        "id": "header", "title": "基本情報",
+        "fields": [
+          { "id": "title",    "label": "タイトル",  "type": "text", "required": true },
+          { "id": "version",  "label": "バージョン","type": "text" },
+          { "id": "status",   "label": "ステータス","type": "select", "options": ["Draft","Under Review","Approved"] },
+          { "id": "author",   "label": "作成者",    "type": "text" },
+          { "id": "approver", "label": "承認者",    "type": "text" }
+        ]
+      },
+      {
+        "id": "units", "title": "ユニット一覧", "type": "itemList",
+        "itemFields": [
+          { "id": "id",         "label": "UNT-ID",     "type": "text", "placeholder": "UNT-001" },
+          { "id": "name",       "label": "ユニット名",  "type": "text" },
+          { "id": "parentARC",  "label": "親 ARC-ID",  "type": "text" },
+          { "id": "filePath",   "label": "ファイルパス","type": "text" },
+          { "id": "responsibility","label": "責務",     "type": "textarea" },
+          { "id": "relatedSWR", "label": "担当 SWR",   "type": "text" }
+        ]
+      },
+      {
+        "id": "apis", "title": "インターフェース仕様", "type": "itemList",
+        "itemFields": [
+          { "id": "unit",        "label": "対象ユニット","type": "text" },
+          { "id": "declaration", "label": "宣言",       "type": "text" },
+          { "id": "purpose",     "label": "目的",       "type": "text" },
+          { "id": "args",        "label": "引数",       "type": "textarea" },
+          { "id": "returns",     "label": "戻り値",     "type": "text" },
+          { "id": "precondition","label": "前提条件",   "type": "textarea" },
+          { "id": "sideEffect",  "label": "副作用",     "type": "textarea" },
+          { "id": "error",       "label": "エラー",     "type": "textarea" }
+        ]
+      },
+      {
+        "id": "errorHandling", "title": "エラー処理設計", "type": "itemList",
+        "itemFields": [
+          { "id": "type",      "label": "エラー種別", "type": "text" },
+          { "id": "detection", "label": "検出方法",   "type": "text" },
+          { "id": "recovery",  "label": "回復処理",   "type": "textarea" },
+          { "id": "notify",    "label": "上位への通知","type": "text" }
+        ]
+      }
+    ]
+  },
+  "SWE4_UTS": {
+    "label": "ユニットテスト仕様書",
+    "process": "SWE4",
+    "idPrefix": "UTS",
+    "sections": [
+      {
+        "id": "header", "title": "基本情報",
+        "fields": [
+          { "id": "title",    "label": "タイトル",  "type": "text", "required": true },
+          { "id": "version",  "label": "バージョン","type": "text" },
+          { "id": "status",   "label": "ステータス","type": "select", "options": ["Draft","Under Review","Approved"] },
+          { "id": "author",   "label": "作成者",    "type": "text" },
+          { "id": "scope",    "label": "対象ユニット","type": "text" }
+        ]
+      },
+      {
+        "id": "approach", "title": "テストアプローチ",
+        "fields": [
+          { "id": "method",        "label": "検証手法",      "type": "text" },
+          { "id": "framework",     "label": "テストFW",      "type": "text" },
+          { "id": "coverageGoal",  "label": "カバレッジ目標","type": "text" },
+          { "id": "mockPolicy",    "label": "モック方針",    "type": "textarea" }
+        ]
+      },
+      {
+        "id": "testcases", "title": "テストケース", "type": "itemList",
+        "itemFields": [
+          { "id": "id",           "label": "TC-ID",    "type": "text", "placeholder": "TC-UNT-001" },
+          { "id": "target",       "label": "テスト対象","type": "text" },
+          { "id": "perspective",  "label": "検証観点", "type": "select", "options": ["正常系","異常系","境界値","初期化"] },
+          { "id": "precondition", "label": "事前条件", "type": "textarea" },
+          { "id": "input",        "label": "入力",     "type": "textarea" },
+          { "id": "expected",     "label": "期待結果", "type": "textarea" },
+          { "id": "source",       "label": "根拠",     "type": "text" },
+          { "id": "priority",     "label": "優先度",   "type": "select", "options": ["High","Medium","Low"] }
+        ]
+      }
+    ]
+  },
+  "SWE4_UTR": {
+    "label": "ユニットテスト結果報告書",
+    "process": "SWE4",
+    "idPrefix": "UTR",
+    "sections": [
+      {
+        "id": "header", "title": "基本情報",
+        "fields": [
+          { "id": "title",       "label": "タイトル",  "type": "text", "required": true },
+          { "id": "version",     "label": "バージョン","type": "text" },
+          { "id": "status",      "label": "ステータス","type": "select", "options": ["Draft","Under Review","Approved"] },
+          { "id": "testDate",    "label": "実施日",    "type": "text" },
+          { "id": "tester",      "label": "実施者",    "type": "text" },
+          { "id": "swVersion",   "label": "SW バージョン","type": "text" },
+          { "id": "environment", "label": "テスト環境","type": "text" }
+        ]
+      },
+      {
+        "id": "results", "title": "テストケース結果", "type": "itemList",
+        "itemFields": [
+          { "id": "tcId",    "label": "TC-ID",   "type": "text" },
+          { "id": "target",  "label": "対象",    "type": "text" },
+          { "id": "verdict", "label": "判定",    "type": "select", "options": ["PASS","FAIL","BLOCKED","N/A"] },
+          { "id": "actual",  "label": "実測値",  "type": "text" },
+          { "id": "bugId",   "label": "不具合ID","type": "text" },
+          { "id": "note",    "label": "備考",    "type": "text" }
+        ]
+      },
+      {
+        "id": "bugs", "title": "不具合一覧", "type": "itemList",
+        "itemFields": [
+          { "id": "id",       "label": "BUG-ID",  "type": "text", "placeholder": "BUG-001" },
+          { "id": "tcId",     "label": "発生 TC", "type": "text" },
+          { "id": "severity", "label": "重要度",  "type": "select", "options": ["Critical","Major","Minor"] },
+          { "id": "symptom",  "label": "症状",    "type": "textarea" },
+          { "id": "cause",    "label": "推定原因","type": "textarea" },
+          { "id": "status",   "label": "状態",    "type": "select", "options": ["Open","In Progress","Fixed","Closed"] }
+        ]
+      }
+    ]
+  },
+  "SWE5_ITS": {
+    "label": "統合テスト仕様書",
+    "process": "SWE5",
+    "idPrefix": "ITS",
+    "sections": [
+      {
+        "id": "header", "title": "基本情報",
+        "fields": [
+          { "id": "title",    "label": "タイトル",  "type": "text", "required": true },
+          { "id": "version",  "label": "バージョン","type": "text" },
+          { "id": "status",   "label": "ステータス","type": "select", "options": ["Draft","Under Review","Approved"] },
+          { "id": "author",   "label": "作成者",    "type": "text" },
+          { "id": "scope",    "label": "検証対象",  "type": "text" }
+        ]
+      },
+      {
+        "id": "strategy", "title": "統合戦略",
+        "fields": [
+          { "id": "approach",    "label": "統合方式",    "type": "select", "options": ["ボトムアップ","トップダウン","ビッグバン"] },
+          { "id": "stubPolicy",  "label": "スタブ方針",  "type": "textarea" },
+          { "id": "environment", "label": "テスト環境",  "type": "textarea" }
+        ]
+      },
+      {
+        "id": "testcases", "title": "テストケース", "type": "itemList",
+        "itemFields": [
+          { "id": "id",           "label": "TC-ID",     "type": "text", "placeholder": "TC-INT-001" },
+          { "id": "target",       "label": "テスト対象","type": "text" },
+          { "id": "perspective",  "label": "検証観点",  "type": "select", "options": ["正常系","異常系","エラー伝搬","タイミング"] },
+          { "id": "precondition", "label": "事前条件",  "type": "textarea" },
+          { "id": "steps",        "label": "手順",      "type": "textarea" },
+          { "id": "expected",     "label": "期待結果",  "type": "textarea" },
+          { "id": "source",       "label": "根拠",      "type": "text" },
+          { "id": "priority",     "label": "優先度",    "type": "select", "options": ["High","Medium","Low"] }
+        ]
+      }
+    ]
+  },
+  "SWE5_ITR": {
+    "label": "統合テスト結果報告書",
+    "process": "SWE5",
+    "idPrefix": "ITR",
+    "sections": [
+      {
+        "id": "header", "title": "基本情報",
+        "fields": [
+          { "id": "title",       "label": "タイトル",     "type": "text", "required": true },
+          { "id": "version",     "label": "バージョン",   "type": "text" },
+          { "id": "status",      "label": "ステータス",   "type": "select", "options": ["Draft","Under Review","Approved"] },
+          { "id": "testDate",    "label": "実施日",       "type": "text" },
+          { "id": "tester",      "label": "実施者",       "type": "text" },
+          { "id": "swVersion",   "label": "SW バージョン","type": "text" }
+        ]
+      },
+      {
+        "id": "results", "title": "テストケース結果", "type": "itemList",
+        "itemFields": [
+          { "id": "tcId",    "label": "TC-ID",  "type": "text" },
+          { "id": "target",  "label": "対象",   "type": "text" },
+          { "id": "verdict", "label": "判定",   "type": "select", "options": ["PASS","FAIL","BLOCKED","N/A"] },
+          { "id": "actual",  "label": "実測値", "type": "text" },
+          { "id": "bugId",   "label": "不具合", "type": "text" },
+          { "id": "note",    "label": "備考",   "type": "text" }
+        ]
+      },
+      {
+        "id": "bugs", "title": "不具合一覧", "type": "itemList",
+        "itemFields": [
+          { "id": "id",       "label": "BUG-ID", "type": "text" },
+          { "id": "severity", "label": "重要度", "type": "select", "options": ["Critical","Major","Minor"] },
+          { "id": "symptom",  "label": "症状",   "type": "textarea" },
+          { "id": "status",   "label": "状態",   "type": "select", "options": ["Open","In Progress","Fixed","Closed"] }
+        ]
+      }
+    ]
+  },
+  "SWE6_QTS": {
+    "label": "適格性確認テスト仕様書",
+    "process": "SWE6",
+    "idPrefix": "QTS",
+    "sections": [
+      {
+        "id": "header", "title": "基本情報",
+        "fields": [
+          { "id": "title",    "label": "タイトル",  "type": "text", "required": true },
+          { "id": "version",  "label": "バージョン","type": "text" },
+          { "id": "status",   "label": "ステータス","type": "select", "options": ["Draft","Under Review","Approved"] },
+          { "id": "author",   "label": "作成者",    "type": "text" },
+          { "id": "scope",    "label": "検証対象",  "type": "text" }
+        ]
+      },
+      {
+        "id": "testcases", "title": "テストケース", "type": "itemList",
+        "itemFields": [
+          { "id": "id",           "label": "TC-ID",     "type": "text", "placeholder": "TC-QAL-001" },
+          { "id": "target",       "label": "テスト対象 SWR","type": "text" },
+          { "id": "perspective",  "label": "検証観点",  "type": "select", "options": ["機能確認","性能確認","境界値","異常系","セキュリティ"] },
+          { "id": "precondition", "label": "事前条件",  "type": "textarea" },
+          { "id": "steps",        "label": "手順",      "type": "textarea" },
+          { "id": "expected",     "label": "期待結果",  "type": "textarea" },
+          { "id": "source",       "label": "根拠 SWR",  "type": "text" },
+          { "id": "priority",     "label": "優先度",    "type": "select", "options": ["High","Medium","Low"] },
+          { "id": "testType",     "label": "テスト種別","type": "select", "options": ["手動","自動","半自動"] }
+        ]
+      },
+      {
+        "id": "coverage", "title": "SWR カバレッジ", "type": "itemList",
+        "itemFields": [
+          { "id": "swrId",    "label": "SWR-ID",   "type": "text" },
+          { "id": "swrTitle", "label": "SWR タイトル","type": "text" },
+          { "id": "priority", "label": "優先度",   "type": "select", "options": ["Must","Should","Nice-to-have"] },
+          { "id": "tcId",     "label": "割り当て TC","type": "text" }
+        ]
+      }
+    ]
+  },
+  "SWE6_QTR": {
+    "label": "適格性確認テスト結果報告書",
+    "process": "SWE6",
+    "idPrefix": "QTR",
+    "sections": [
+      {
+        "id": "header", "title": "基本情報",
+        "fields": [
+          { "id": "title",       "label": "タイトル",     "type": "text", "required": true },
+          { "id": "version",     "label": "バージョン",   "type": "text" },
+          { "id": "status",      "label": "ステータス",   "type": "select", "options": ["Draft","Under Review","Approved"] },
+          { "id": "testDate",    "label": "実施日",       "type": "text" },
+          { "id": "tester",      "label": "実施者",       "type": "text" },
+          { "id": "swVersion",   "label": "SW バージョン","type": "text" }
+        ]
+      },
+      {
+        "id": "results", "title": "テストケース結果", "type": "itemList",
+        "itemFields": [
+          { "id": "tcId",    "label": "TC-ID",  "type": "text" },
+          { "id": "target",  "label": "SWR",    "type": "text" },
+          { "id": "verdict", "label": "判定",   "type": "select", "options": ["PASS","FAIL","BLOCKED","N/A"] },
+          { "id": "actual",  "label": "実測値", "type": "text" },
+          { "id": "bugId",   "label": "不具合", "type": "text" }
+        ]
+      },
+      {
+        "id": "releaseDecision", "title": "リリース判定",
+        "fields": [
+          { "id": "decision",    "label": "判定結果",     "type": "select", "options": ["リリース可","条件付きリリース可","リリース不可"] },
+          { "id": "swrCoverage", "label": "SWR カバレッジ","type": "text" },
+          { "id": "conditions",  "label": "残課題・条件", "type": "textarea" }
+        ]
+      }
+    ]
+  }
+}
