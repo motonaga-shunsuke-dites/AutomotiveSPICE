@@ -6,52 +6,82 @@
     "sections": [
       {
         "id": "header", "title": "基本情報",
+        "help": "ドキュメントの管理情報。承認前に全フィールドを埋めること。",
         "fields": [
-          { "id": "title",    "label": "タイトル",  "type": "text", "required": true },
-          { "id": "version",  "label": "バージョン","type": "text" },
-          { "id": "status",   "label": "ステータス","type": "select", "options": ["Draft","Under Review","Approved"] },
-          { "id": "author",   "label": "作成者",    "type": "text" },
-          { "id": "approver", "label": "承認者",    "type": "text" }
+          { "id": "title",    "label": "タイトル",   "type": "text", "required": true,
+            "help": "ドキュメントの正式名称。例: 「ECU制御SW ソフトウェア要件仕様書」" },
+          { "id": "version",  "label": "バージョン", "type": "text",
+            "help": "X.Y形式。初版=1.0、内容変更=マイナー+1（1.1）、大幅改訂=メジャー+1（2.0）" },
+          { "id": "status",   "label": "ステータス", "type": "select", "options": ["Draft","Under Review","Approved"],
+            "help": "Draft=作成中 / Under Review=レビュー中（変更禁止） / Approved=承認済み（基線化）" },
+          { "id": "author",   "label": "作成者",     "type": "text",
+            "help": "主担当者の氏名。複数いる場合はカンマ区切り" },
+          { "id": "approver", "label": "承認者",     "type": "text",
+            "help": "レビューを実施し承認する責任者の氏名" }
         ]
       },
       {
         "id": "purpose", "title": "目的・スコープ",
+        "help": "このドキュメントが何を定義し、何を対象外とするかを明確にする。",
         "fields": [
-          { "id": "purpose",    "label": "目的",    "type": "textarea" },
-          { "id": "scope",      "label": "スコープ","type": "textarea" },
-          { "id": "outOfScope", "label": "対象外",  "type": "textarea" }
+          { "id": "purpose",    "label": "目的",    "type": "textarea",
+            "help": "このSRSが存在する理由。例: 「ECU制御SWの機能要件・非機能要件を定義し、設計・テストの基準とする」" },
+          { "id": "scope",      "label": "スコープ","type": "textarea",
+            "help": "対象とするシステム・コンポーネントの範囲。例: 「エンジン制御ECUのアプリケーション層SW」" },
+          { "id": "outOfScope", "label": "対象外",  "type": "textarea",
+            "help": "明示的に対象外とする範囲。例: 「ブートローダ、診断通信プロトコル層」" }
         ]
       },
       {
         "id": "requirements", "title": "機能要件", "type": "itemList",
+        "help": "システムが「何をすべきか」を記述する。shall構文を使うこと。",
         "itemFields": [
-          { "id": "id",          "label": "ID",       "type": "text", "placeholder": "SWR-001" },
-          { "id": "title",       "label": "タイトル", "type": "text" },
-          { "id": "description", "label": "説明",     "type": "textarea" },
-          { "id": "priority",    "label": "優先度",   "type": "select", "options": ["Must","Should","Nice-to-have"] },
-          { "id": "source",      "label": "根拠",     "type": "text", "placeholder": "SYS-001" },
-          { "id": "acceptance",  "label": "受入基準", "type": "textarea" },
-          { "id": "status",      "label": "状態",     "type": "select", "options": ["Draft","Agreed","Deleted"] }
+          { "id": "id",          "label": "ID",       "type": "text", "placeholder": "SWR-001",
+            "help": "一意な要件ID。SWR-001から連番。削除時は自動で詰められる。" },
+          { "id": "title",       "label": "タイトル", "type": "text",
+            "help": "要件を一文で表す見出し。例: 「エンジン回転数上限制御」" },
+          { "id": "description", "label": "説明",     "type": "textarea",
+            "help": "shall構文で記述。例: 「システムはエンジン回転数が6000rpmを超えた場合、燃料噴射を遮断すること」" },
+          { "id": "priority",    "label": "優先度",   "type": "select", "options": ["Must","Should","Nice-to-have"],
+            "help": "Must=法規・安全上の必須要件 / Should=製品品質上の重要要件 / Nice-to-have=あれば好ましい要件" },
+          { "id": "source",      "label": "要求元",   "type": "partRef", "partCategory": "stakeholders",
+            "help": "この要件を要求したステークホルダーまたは上位要件のID。ライブラリで事前登録すると一覧から選択できる。" },
+          { "id": "acceptance",  "label": "受入基準", "type": "textarea",
+            "help": "この要件が満たされたと判断するための客観的な基準。テストケースの根拠となる。" },
+          { "id": "status",      "label": "状態",     "type": "select", "options": ["Draft","Agreed","Deleted"],
+            "help": "Draft=作成中 / Agreed=ステークホルダーと合意済 / Deleted=削除（ID保持）" }
         ]
       },
       {
         "id": "nfRequirements", "title": "非機能要件", "type": "itemList",
+        "help": "性能・安全・セキュリティなど「どのように振る舞うか」を記述する。",
         "itemFields": [
-          { "id": "id",          "label": "ID",     "type": "text", "placeholder": "SWR-N01" },
-          { "id": "category",    "label": "種別",   "type": "select", "options": ["性能","安全","セキュリティ","信頼性","保守性"] },
-          { "id": "description", "label": "要件",   "type": "textarea" },
-          { "id": "target",      "label": "目標値", "type": "text" },
-          { "id": "source",      "label": "根拠",   "type": "text" }
+          { "id": "id",          "label": "ID",     "type": "text", "placeholder": "SWR-N01",
+            "help": "非機能要件ID。SWR-N01から連番。" },
+          { "id": "category",    "label": "種別",   "type": "select", "options": ["性能","安全","セキュリティ","信頼性","保守性"],
+            "help": "性能=応答時間・スループット / 安全=ASIL要求等 / セキュリティ=認証・暗号化 / 信頼性=MTBF等 / 保守性=テスト容易性等" },
+          { "id": "description", "label": "要件",   "type": "textarea",
+            "help": "定量的な目標値を含めて記述。例: 「制御周期100ms以内に演算を完了すること」" },
+          { "id": "target",      "label": "目標値", "type": "text",
+            "help": "測定可能な数値目標。例: 「≤100ms」「99.9%以上」" },
+          { "id": "source",      "label": "根拠",   "type": "text",
+            "help": "この非機能要件の出典（法規・規格・顧客仕様書番号等）。例: 「ISO26262 ASIL-B」" }
         ]
       },
       {
         "id": "issues", "title": "課題・懸念事項", "type": "itemList",
+        "help": "要件確定前の未解決事項や懸念点を記録する。",
         "itemFields": [
-          { "id": "id",      "label": "課題ID",   "type": "text", "placeholder": "ISS-01" },
-          { "id": "content", "label": "内容",     "type": "textarea" },
-          { "id": "impact",  "label": "影響範囲", "type": "text" },
-          { "id": "owner",   "label": "担当者",   "type": "text" },
-          { "id": "status",  "label": "状態",     "type": "select", "options": ["Open","In Progress","Closed"] }
+          { "id": "id",      "label": "課題ID",   "type": "text", "placeholder": "ISS-01",
+            "help": "課題の識別ID。ISS-01から連番。" },
+          { "id": "content", "label": "内容",     "type": "textarea",
+            "help": "課題の具体的な内容と背景。" },
+          { "id": "impact",  "label": "影響範囲", "type": "text",
+            "help": "この課題が解決されない場合の影響（要件・スケジュール・コスト等）。" },
+          { "id": "owner",   "label": "担当者",   "type": "text",
+            "help": "課題の解決責任者の氏名。" },
+          { "id": "status",  "label": "状態",     "type": "select", "options": ["Open","In Progress","Closed"],
+            "help": "Open=未対応 / In Progress=対応中 / Closed=解決済み" }
         ]
       }
     ]
@@ -64,54 +94,88 @@
       {
         "id": "header", "title": "基本情報",
         "fields": [
-          { "id": "title",    "label": "タイトル",  "type": "text", "required": true },
-          { "id": "version",  "label": "バージョン","type": "text" },
-          { "id": "status",   "label": "ステータス","type": "select", "options": ["Draft","Under Review","Approved"] },
-          { "id": "author",   "label": "作成者",    "type": "text" },
-          { "id": "approver", "label": "承認者",    "type": "text" }
+          { "id": "title",    "label": "タイトル",   "type": "text", "required": true,
+            "help": "例: 「ECU制御SW ソフトウェアアーキテクチャ設計書」" },
+          { "id": "version",  "label": "バージョン", "type": "text",
+            "help": "X.Y形式。SRSが変更された場合はSADも必ず更新すること。" },
+          { "id": "status",   "label": "ステータス", "type": "select", "options": ["Draft","Under Review","Approved"],
+            "help": "Draft=作成中 / Under Review=レビュー中 / Approved=承認済み（基線化）" },
+          { "id": "author",   "label": "作成者",     "type": "text",
+            "help": "アーキテクチャ設計の主担当者" },
+          { "id": "approver", "label": "承認者",     "type": "text",
+            "help": "アーキテクチャレビューを実施する上位設計者またはアーキテクト" }
         ]
       },
       {
         "id": "overview", "title": "アーキテクチャ概要",
+        "help": "設計の基本方針と全体構成を記述する。後続の詳細設計の前提となる重要なセクション。",
         "fields": [
-          { "id": "policy",    "label": "設計方針",      "type": "textarea" },
-          { "id": "pattern",   "label": "採用パターン",  "type": "text" },
-          { "id": "contextDiagram", "label": "コンテキスト図 (テキスト)", "type": "textarea" }
+          { "id": "policy",         "label": "設計方針",                 "type": "textarea",
+            "help": "アーキテクチャの設計原則。例: 「単一責任原則に基づきコンポーネントを分割する」「AUTOSAR APに準拠する」" },
+          { "id": "pattern",        "label": "採用パターン",             "type": "text",
+            "help": "採用するアーキテクチャパターン。例: 「レイヤードアーキテクチャ」「パブリッシュ/サブスクライブ」" },
+          { "id": "contextDiagram", "label": "コンテキスト図", "type": "diagram",
+            "help": "外部システムとの接続をMermaid記法で表現。例:\ngraph LR\n  User[ユーザー] --> App[システム]\n  App --> DB[(DB)]" },
+          { "id": "componentDiagram", "label": "コンポーネント依存図", "type": "diagram",
+            "help": "コンポーネント間の依存関係をMermaid記法で表現。例:\ngraph TD\n  A[モジュールA] --> B[モジュールB]" }
         ]
       },
       {
         "id": "components", "title": "コンポーネント構成", "type": "itemList",
+        "help": "SWを構成する論理コンポーネントを定義する。定義したコンポーネントはライブラリに登録すると後続工程で再利用できる。",
         "itemFields": [
-          { "id": "id",           "label": "ID",          "type": "text", "placeholder": "ARC-001" },
-          { "id": "name",         "label": "コンポーネント名","type": "text" },
-          { "id": "responsibility","label": "責務",        "type": "textarea" },
-          { "id": "relatedSWR",   "label": "担当 SWR",    "type": "text" },
-          { "id": "dependencies", "label": "依存関係",    "type": "text" },
-          { "id": "constraints",  "label": "制約",        "type": "textarea" }
+          { "id": "id",            "label": "ARC-ID",       "type": "text", "placeholder": "ARC-001",
+            "help": "コンポーネントID。ARC-001から連番。SDD・テスト仕様書で参照される。" },
+          { "id": "name",          "label": "コンポーネント名","type": "text",
+            "help": "機能を明確に示す名前。例: 「エンジン回転数制御モジュール」。定義後はライブラリ（コンポーネント）に登録しておく。" },
+          { "id": "responsibility","label": "責務",          "type": "textarea",
+            "help": "このコンポーネントが担う処理・機能の説明。1コンポーネント=1責務を原則とする。" },
+          { "id": "relatedSWR",   "label": "担当 SWR",      "type": "text",
+            "help": "このコンポーネントが実現するSWR IDをカンマ区切りで。例: 「SWR-001, SWR-002」" },
+          { "id": "dependencies", "label": "依存関係",      "type": "text",
+            "help": "依存する他コンポーネントのARC-IDをカンマ区切りで。循環依存は禁止。例: 「ARC-003, ARC-005」" },
+          { "id": "constraints",  "label": "制約",          "type": "textarea",
+            "help": "このコンポーネントに課せられる制約事項。例: 「ISR（割り込みサービスルーチン）から呼び出されるため処理時間1ms以内」" }
         ]
       },
       {
         "id": "interfaces", "title": "インターフェース設計", "type": "itemList",
+        "help": "コンポーネント間の接続仕様を定義する。インターフェースが変わると双方のコンポーネントに影響するため慎重に設計する。",
         "itemFields": [
-          { "id": "id",        "label": "ID",      "type": "text", "placeholder": "IFC-001" },
-          { "id": "provider",  "label": "提供側",  "type": "text" },
-          { "id": "consumer",  "label": "消費側",  "type": "text" },
-          { "id": "operation", "label": "操作名",  "type": "text" },
-          { "id": "args",      "label": "引数・戻り値", "type": "textarea" },
-          { "id": "frequency", "label": "呼び出し頻度","type": "text" },
-          { "id": "error",     "label": "エラー処理","type": "textarea" }
+          { "id": "id",        "label": "IFC-ID",      "type": "text", "placeholder": "IFC-001",
+            "help": "インターフェースID。IFC-001から連番。" },
+          { "id": "provider",  "label": "提供側",      "type": "partRef", "partCategory": "components",
+            "help": "この機能を提供するコンポーネント名。ライブラリ（コンポーネント）から選択。" },
+          { "id": "consumer",  "label": "消費側",      "type": "partRef", "partCategory": "components",
+            "help": "この機能を呼び出し利用するコンポーネント名。ライブラリ（コンポーネント）から選択。" },
+          { "id": "operation", "label": "操作名",      "type": "text",
+            "help": "関数名・API名。例: 「getEngineRPM」「initController」" },
+          { "id": "args",      "label": "引数・戻り値","type": "textarea",
+            "help": "型と意味を記述。例:\n引数: uint16_t targetRPM (目標回転数 rpm単位)\n戻り値: bool (成功=true)" },
+          { "id": "frequency", "label": "呼び出し頻度","type": "text",
+            "help": "呼び出し周期または頻度。例: 「10ms周期」「イベント駆動（回転数変化時）」" },
+          { "id": "error",     "label": "エラー処理",  "type": "textarea",
+            "help": "エラー時の戻り値と呼び出し元での処理方針。" }
         ]
       },
       {
         "id": "adr", "title": "設計決定 (ADR)", "type": "itemList",
+        "help": "重要な設計決定とその根拠を記録する。将来の変更時に再検討の材料となる。",
         "itemFields": [
-          { "id": "id",          "label": "ADR-ID",    "type": "text", "placeholder": "ADR-001" },
-          { "id": "title",       "label": "タイトル",  "type": "text" },
-          { "id": "context",     "label": "コンテキスト","type": "textarea" },
-          { "id": "decision",    "label": "決定内容",  "type": "textarea" },
-          { "id": "rationale",   "label": "採用理由",  "type": "textarea" },
-          { "id": "alternatives","label": "却下した代替案","type": "textarea" },
-          { "id": "status",      "label": "状態",      "type": "select", "options": ["Accepted","Deprecated","Superseded"] }
+          { "id": "id",           "label": "ADR-ID",       "type": "text", "placeholder": "ADR-001",
+            "help": "設計決定ID。ADR-001から連番。" },
+          { "id": "title",        "label": "タイトル",     "type": "text",
+            "help": "決定内容の短い見出し。例: 「排他制御にミューテックスではなく割り込み禁止を採用する」" },
+          { "id": "context",      "label": "コンテキスト", "type": "textarea",
+            "help": "この設計決定が必要になった背景・制約・問題点。" },
+          { "id": "decision",     "label": "決定内容",     "type": "textarea",
+            "help": "採用した設計案の具体的な内容。" },
+          { "id": "rationale",    "label": "採用理由",     "type": "textarea",
+            "help": "この案を選んだ理由と、他の案と比較した利点。" },
+          { "id": "alternatives", "label": "却下した代替案","type": "textarea",
+            "help": "検討したが採用しなかった案と、却下した理由。" },
+          { "id": "status",       "label": "状態",         "type": "select", "options": ["Accepted","Deprecated","Superseded"],
+            "help": "Accepted=有効 / Deprecated=廃止（新規設計では不採用） / Superseded=後続のADRに置き換えられた" }
         ]
       }
     ]
@@ -124,44 +188,86 @@
       {
         "id": "header", "title": "基本情報",
         "fields": [
-          { "id": "title",    "label": "タイトル",  "type": "text", "required": true },
-          { "id": "version",  "label": "バージョン","type": "text" },
-          { "id": "status",   "label": "ステータス","type": "select", "options": ["Draft","Under Review","Approved"] },
-          { "id": "author",   "label": "作成者",    "type": "text" },
-          { "id": "approver", "label": "承認者",    "type": "text" }
+          { "id": "title",    "label": "タイトル",   "type": "text", "required": true,
+            "help": "例: 「エンジン回転数制御モジュール 詳細設計書」" },
+          { "id": "version",  "label": "バージョン", "type": "text",
+            "help": "X.Y形式。SADが変更された場合は対応するSDDも更新すること。" },
+          { "id": "status",   "label": "ステータス", "type": "select", "options": ["Draft","Under Review","Approved"],
+            "help": "Draft=作成中 / Under Review=レビュー中 / Approved=承認済み" },
+          { "id": "author",   "label": "作成者",     "type": "text",
+            "help": "詳細設計の主担当者（実装者と同一が望ましい）" },
+          { "id": "approver", "label": "承認者",     "type": "text",
+            "help": "詳細設計レビューを実施する上位設計者" }
         ]
       },
       {
         "id": "units", "title": "ユニット一覧", "type": "itemList",
+        "help": "コンポーネントを構成する実装単位（ファイル・クラス・関数群）を定義する。定義後はライブラリ（ユニット）に登録する。",
         "itemFields": [
-          { "id": "id",         "label": "UNT-ID",     "type": "text", "placeholder": "UNT-001" },
-          { "id": "name",       "label": "ユニット名",  "type": "text" },
-          { "id": "parentARC",  "label": "親 ARC-ID",  "type": "text" },
-          { "id": "filePath",   "label": "ファイルパス","type": "text" },
-          { "id": "responsibility","label": "責務",     "type": "textarea" },
-          { "id": "relatedSWR", "label": "担当 SWR",   "type": "text" }
+          { "id": "id",            "label": "UNT-ID",      "type": "text", "placeholder": "UNT-001",
+            "help": "ユニットID。UNT-001から連番。ユニットテスト仕様書で参照される。" },
+          { "id": "name",          "label": "ユニット名",  "type": "text",
+            "help": "実装ファイル名またはクラス名。例: 「rpm_controller.c」「RpmController」。定義後はライブラリ（ユニット）に登録。" },
+          { "id": "component",     "label": "親コンポーネント", "type": "partRef", "partCategory": "components",
+            "help": "このユニットが属するコンポーネント名。ライブラリ（コンポーネント）から選択。" },
+          { "id": "filePath",      "label": "ファイルパス","type": "text",
+            "help": "リポジトリルートからの相対パス。例: 「src/engine/rpm_controller.c」" },
+          { "id": "responsibility","label": "責務",        "type": "textarea",
+            "help": "このユニットが担う具体的な処理。アルゴリズムの概要も記載する。" },
+          { "id": "relatedSWR",    "label": "担当 SWR",    "type": "text",
+            "help": "このユニットが実現するSWR IDをカンマ区切りで。例: 「SWR-001」" }
         ]
       },
       {
         "id": "apis", "title": "インターフェース仕様", "type": "itemList",
+        "help": "ユニットが公開する関数・APIの仕様を定義する。他ユニットとの契約として機能する。",
         "itemFields": [
-          { "id": "unit",        "label": "対象ユニット","type": "text" },
-          { "id": "declaration", "label": "宣言",       "type": "text" },
-          { "id": "purpose",     "label": "目的",       "type": "text" },
-          { "id": "args",        "label": "引数",       "type": "textarea" },
-          { "id": "returns",     "label": "戻り値",     "type": "text" },
-          { "id": "precondition","label": "前提条件",   "type": "textarea" },
-          { "id": "sideEffect",  "label": "副作用",     "type": "textarea" },
-          { "id": "error",       "label": "エラー",     "type": "textarea" }
+          { "id": "unit",        "label": "対象ユニット", "type": "partRef", "partCategory": "units",
+            "help": "この関数が属するユニット名。ライブラリ（ユニット）から選択。" },
+          { "id": "declaration", "label": "宣言",         "type": "text",
+            "help": "関数シグネチャ。例: 「bool RPM_Init(const RpmConfig* config)」" },
+          { "id": "purpose",     "label": "目的",         "type": "text",
+            "help": "この関数が何をするかを一文で。例: 「RPM制御モジュールを初期化する」" },
+          { "id": "args",        "label": "引数",         "type": "textarea",
+            "help": "各引数の型・名前・意味・有効範囲。例:\nconfig: 初期化パラメータ構造体へのポインタ（NULLは不可）" },
+          { "id": "returns",     "label": "戻り値",       "type": "text",
+            "help": "戻り値の型と意味。例: 「true=初期化成功 / false=パラメータエラー」" },
+          { "id": "precondition","label": "前提条件",     "type": "textarea",
+            "help": "この関数を呼ぶ前に満たしていなければならない条件。例: 「ハードウェアの電源投入が完了していること」" },
+          { "id": "sideEffect",  "label": "副作用",       "type": "textarea",
+            "help": "この関数が変更するグローバル変数・状態・ハードウェアレジスタ等。" },
+          { "id": "error",       "label": "エラー処理",   "type": "textarea",
+            "help": "エラーが発生した場合の動作と、呼び出し元への通知方法。" }
         ]
       },
       {
         "id": "errorHandling", "title": "エラー処理設計", "type": "itemList",
+        "help": "システム全体のエラー処理方針を定義する。各ユニットのエラー処理はここを参照して実装する。",
         "itemFields": [
-          { "id": "type",      "label": "エラー種別", "type": "text" },
-          { "id": "detection", "label": "検出方法",   "type": "text" },
-          { "id": "recovery",  "label": "回復処理",   "type": "textarea" },
-          { "id": "notify",    "label": "上位への通知","type": "text" }
+          { "id": "type",      "label": "エラー種別", "type": "text",
+            "help": "エラーの分類。例: 「パラメータ不正」「タイムアウト」「ハードウェア故障」" },
+          { "id": "detection", "label": "検出方法",   "type": "text",
+            "help": "エラーをどのように検出するか。例: 「引数のNULLチェック」「ウォッチドッグタイマー」" },
+          { "id": "recovery",  "label": "回復処理",   "type": "textarea",
+            "help": "エラー発生後の回復手順。例: 「デフォルト値で継続」「フェールセーフ状態へ遷移」" },
+          { "id": "notify",    "label": "上位への通知","type": "text",
+            "help": "上位モジュール・システムへの通知方法。例: 「戻り値false」「エラーコールバック関数呼び出し」" }
+        ]
+      },
+      {
+        "id": "diagrams", "title": "設計図",
+        "help": "クラス図・シーケンス図などをMermaid記法で記述する。図ごとに分割して記入する。",
+        "fields": [
+          { "id": "classDiagram",      "label": "クラス図",                     "type": "diagram",
+            "help": "ユニットのクラス構造・メソッド・依存関係をclassDiagram記法で記述する。" },
+          { "id": "seqTemplateLoad",   "label": "シーケンス図: テンプレート読み込み", "type": "diagram",
+            "help": "ひな型選択からグリッド表示までの処理フローをsequenceDiagram記法で記述する。" },
+          { "id": "seqElementPlace",   "label": "シーケンス図: 要素配置",       "type": "diagram",
+            "help": "ユーザーがセルに要素を配置してUndoスタックに積まれるまでのフローを記述する。" },
+          { "id": "seqExport",         "label": "シーケンス図: PNG/SVG出力",    "type": "diagram",
+            "help": "エクスポート操作からファイル保存完了までのIPC通信を含むフローを記述する。" },
+          { "id": "seqTemplateSave",   "label": "シーケンス図: テンプレート保存/読み込み", "type": "diagram",
+            "help": "テンプレートのJSON保存・再読み込みフローを記述する。" }
         ]
       }
     ]
@@ -174,33 +280,52 @@
       {
         "id": "header", "title": "基本情報",
         "fields": [
-          { "id": "title",    "label": "タイトル",  "type": "text", "required": true },
-          { "id": "version",  "label": "バージョン","type": "text" },
-          { "id": "status",   "label": "ステータス","type": "select", "options": ["Draft","Under Review","Approved"] },
-          { "id": "author",   "label": "作成者",    "type": "text" },
-          { "id": "scope",    "label": "対象ユニット","type": "text" }
+          { "id": "title",   "label": "タイトル",    "type": "text", "required": true,
+            "help": "例: 「rpm_controller.c ユニットテスト仕様書」" },
+          { "id": "version", "label": "バージョン",  "type": "text",
+            "help": "X.Y形式。SDDが変更されたら対応するUTSも更新すること。" },
+          { "id": "status",  "label": "ステータス",  "type": "select", "options": ["Draft","Under Review","Approved"],
+            "help": "Approved になるまでテスト実施を開始しないこと。" },
+          { "id": "author",  "label": "作成者",      "type": "text",
+            "help": "テスト仕様書の作成者（実装者と別の担当者が望ましい）" },
+          { "id": "scope",   "label": "対象ユニット","type": "partRef", "partCategory": "units",
+            "help": "テスト対象のユニット名。ライブラリ（ユニット）から選択。" }
         ]
       },
       {
         "id": "approach", "title": "テストアプローチ",
+        "help": "テストをどのように実施するかの方針。テスト実施前にレビューして合意すること。",
         "fields": [
-          { "id": "method",        "label": "検証手法",      "type": "text" },
-          { "id": "framework",     "label": "テストFW",      "type": "text" },
-          { "id": "coverageGoal",  "label": "カバレッジ目標","type": "text" },
-          { "id": "mockPolicy",    "label": "モック方針",    "type": "textarea" }
+          { "id": "method",       "label": "検証手法",      "type": "text",
+            "help": "ホワイトボックス（内部構造を考慮）/ ブラックボックス（入出力のみ）/ グレーボックス（両方）" },
+          { "id": "framework",    "label": "テストFW",      "type": "text",
+            "help": "使用するテストフレームワーク。例: 「Google Test」「Unity（C用）」「pytest」" },
+          { "id": "coverageGoal", "label": "カバレッジ目標","type": "text",
+            "help": "命令カバレッジ・分岐カバレッジの目標値。例: 「命令90%以上、分岐80%以上」（ASPICE推奨）" },
+          { "id": "mockPolicy",   "label": "モック方針",    "type": "textarea",
+            "help": "依存する外部モジュールをどうモック化するか。例: 「HWアクセス層はスタブに差し替える」" }
         ]
       },
       {
         "id": "testcases", "title": "テストケース", "type": "itemList",
+        "help": "各テストケースはSDDの1関数/1シナリオに対応させる。正常系・異常系・境界値を網羅すること。",
         "itemFields": [
-          { "id": "id",           "label": "TC-ID",    "type": "text", "placeholder": "TC-UNT-001" },
-          { "id": "target",       "label": "テスト対象","type": "text" },
-          { "id": "perspective",  "label": "検証観点", "type": "select", "options": ["正常系","異常系","境界値","初期化"] },
-          { "id": "precondition", "label": "事前条件", "type": "textarea" },
-          { "id": "input",        "label": "入力",     "type": "textarea" },
-          { "id": "expected",     "label": "期待結果", "type": "textarea" },
-          { "id": "source",       "label": "根拠",     "type": "text" },
-          { "id": "priority",     "label": "優先度",   "type": "select", "options": ["High","Medium","Low"] }
+          { "id": "id",           "label": "TC-ID",    "type": "text", "placeholder": "TC-UNT-001",
+            "help": "テストケースID。TC-UNT-001から連番。" },
+          { "id": "target",       "label": "テスト対象","type": "partRef", "partCategory": "units",
+            "help": "テスト対象の関数名またはユニット名。ライブラリ（ユニット）から選択。" },
+          { "id": "perspective",  "label": "検証観点", "type": "select", "options": ["正常系","異常系","境界値","初期化"],
+            "help": "正常系=正常入力での正しい動作 / 異常系=不正入力・エラー時の動作 / 境界値=上限・下限・ゼロ等 / 初期化=初期化処理の正確性" },
+          { "id": "precondition", "label": "事前条件", "type": "textarea",
+            "help": "テスト実行前に整えるべき状態。例: 「RPMモジュールが初期化済みであること」" },
+          { "id": "input",        "label": "入力",     "type": "textarea",
+            "help": "テストに与える具体的な入力値。例: 「targetRPM=6500 (上限超過)」" },
+          { "id": "expected",     "label": "期待結果", "type": "textarea",
+            "help": "正しい実装であれば得られるべき出力・状態変化。例: 「戻り値false、燃料噴射フラグOFF」" },
+          { "id": "source",       "label": "根拠",     "type": "text",
+            "help": "このテストケースの根拠となるSWRまたはUNTのID。例: 「SWR-001」「UNT-003」" },
+          { "id": "priority",     "label": "優先度",   "type": "select", "options": ["High","Medium","Low"],
+            "help": "High=安全機能・Mustの要件に関連 / Medium=主要機能 / Low=補完的なテスト" }
         ]
       }
     ]
@@ -213,35 +338,56 @@
       {
         "id": "header", "title": "基本情報",
         "fields": [
-          { "id": "title",       "label": "タイトル",  "type": "text", "required": true },
-          { "id": "version",     "label": "バージョン","type": "text" },
-          { "id": "status",      "label": "ステータス","type": "select", "options": ["Draft","Under Review","Approved"] },
-          { "id": "testDate",    "label": "実施日",    "type": "text" },
-          { "id": "tester",      "label": "実施者",    "type": "text" },
-          { "id": "swVersion",   "label": "SW バージョン","type": "text" },
-          { "id": "environment", "label": "テスト環境","type": "text" }
+          { "id": "title",       "label": "タイトル",       "type": "text", "required": true,
+            "help": "対応するUTSのタイトルと合わせる。例: 「rpm_controller.c ユニットテスト結果報告書 v1.0」" },
+          { "id": "version",     "label": "バージョン",     "type": "text",
+            "help": "実施したUTSのバージョンと一致させること。" },
+          { "id": "status",      "label": "ステータス",     "type": "select", "options": ["Draft","Under Review","Approved"],
+            "help": "全テストがPASSし不具合が解消されてから Approved にすること。" },
+          { "id": "testDate",    "label": "実施日",         "type": "text",
+            "help": "テスト実施日。YYYY-MM-DD形式。例: 「2026-06-15」" },
+          { "id": "tester",      "label": "実施者",         "type": "text",
+            "help": "テストを実施した担当者の氏名" },
+          { "id": "swVersion",   "label": "SW バージョン",  "type": "text",
+            "help": "テスト対象のSWバージョン（gitタグ・コミットハッシュ等）。例: 「v1.2.3」「git:abc1234」" },
+          { "id": "environment", "label": "テスト環境",     "type": "text",
+            "help": "使用したOS・コンパイラ・HWの情報。例: 「Ubuntu 22.04 / gcc 11.3 / x86_64」" }
         ]
       },
       {
         "id": "results", "title": "テストケース結果", "type": "itemList",
+        "help": "UTSの各テストケースに対して実測結果を記録する。1行=1テストケース。",
         "itemFields": [
-          { "id": "tcId",    "label": "TC-ID",   "type": "text" },
-          { "id": "target",  "label": "対象",    "type": "text" },
-          { "id": "verdict", "label": "判定",    "type": "select", "options": ["PASS","FAIL","BLOCKED","N/A"] },
-          { "id": "actual",  "label": "実測値",  "type": "text" },
-          { "id": "bugId",   "label": "不具合ID","type": "text" },
-          { "id": "note",    "label": "備考",    "type": "text" }
+          { "id": "tcId",    "label": "TC-ID",   "type": "text",
+            "help": "実施したテストケースのID（UTSと一致）" },
+          { "id": "target",  "label": "対象",    "type": "text",
+            "help": "テスト対象の関数・ユニット名" },
+          { "id": "verdict", "label": "判定",    "type": "select", "options": ["PASS","FAIL","BLOCKED","N/A"],
+            "help": "PASS=期待結果と一致 / FAIL=期待結果と不一致（不具合IDを記録）/ BLOCKED=環境問題で実施不可 / N/A=対象外" },
+          { "id": "actual",  "label": "実測値",  "type": "text",
+            "help": "実際の出力値・状態。期待結果と異なる場合に特に詳しく記録。" },
+          { "id": "bugId",   "label": "不具合ID","type": "text",
+            "help": "FAILの場合、対応する不具合IDを記録。例: 「BUG-003」" },
+          { "id": "note",    "label": "備考",    "type": "text",
+            "help": "特記事項。環境起因の問題や再現条件等。" }
         ]
       },
       {
         "id": "bugs", "title": "不具合一覧", "type": "itemList",
+        "help": "テストで発見した不具合を記録する。全不具合がClosedになるまでUnder Review状態を維持すること。",
         "itemFields": [
-          { "id": "id",       "label": "BUG-ID",  "type": "text", "placeholder": "BUG-001" },
-          { "id": "tcId",     "label": "発生 TC", "type": "text" },
-          { "id": "severity", "label": "重要度",  "type": "select", "options": ["Critical","Major","Minor"] },
-          { "id": "symptom",  "label": "症状",    "type": "textarea" },
-          { "id": "cause",    "label": "推定原因","type": "textarea" },
-          { "id": "status",   "label": "状態",    "type": "select", "options": ["Open","In Progress","Fixed","Closed"] }
+          { "id": "id",       "label": "BUG-ID",  "type": "text", "placeholder": "BUG-001",
+            "help": "不具合ID。BUG-001から連番。" },
+          { "id": "tcId",     "label": "発生 TC", "type": "text",
+            "help": "この不具合が発見されたテストケースID" },
+          { "id": "severity", "label": "重要度",  "type": "select", "options": ["Critical","Major","Minor"],
+            "help": "Critical=安全・基本機能に影響（リリース不可） / Major=主要機能に影響 / Minor=軽微な問題" },
+          { "id": "symptom",  "label": "症状",    "type": "textarea",
+            "help": "観察された現象を具体的に記述。例: 「6500rpm入力時に戻り値がtrueになった（falseであるべき）」" },
+          { "id": "cause",    "label": "推定原因","type": "textarea",
+            "help": "根本原因の分析。例: 「rpm_controller.cの73行目、比較演算子が<=でなく<になっている」" },
+          { "id": "status",   "label": "状態",    "type": "select", "options": ["Open","In Progress","Fixed","Closed"],
+            "help": "Open=未対応 / In Progress=修正中 / Fixed=修正完了（再テスト待ち）/ Closed=再テストでPASS確認済み" }
         ]
       }
     ]
@@ -254,32 +400,50 @@
       {
         "id": "header", "title": "基本情報",
         "fields": [
-          { "id": "title",    "label": "タイトル",  "type": "text", "required": true },
-          { "id": "version",  "label": "バージョン","type": "text" },
-          { "id": "status",   "label": "ステータス","type": "select", "options": ["Draft","Under Review","Approved"] },
-          { "id": "author",   "label": "作成者",    "type": "text" },
-          { "id": "scope",    "label": "検証対象",  "type": "text" }
+          { "id": "title",   "label": "タイトル",    "type": "text", "required": true,
+            "help": "例: 「エンジン制御サブシステム 統合テスト仕様書」" },
+          { "id": "version", "label": "バージョン",  "type": "text",
+            "help": "X.Y形式。SDD・SADが変更されたら更新すること。" },
+          { "id": "status",  "label": "ステータス",  "type": "select", "options": ["Draft","Under Review","Approved"],
+            "help": "Approved になるまでテスト実施を開始しないこと。" },
+          { "id": "author",  "label": "作成者",      "type": "text",
+            "help": "テスト仕様書の作成者" },
+          { "id": "scope",   "label": "検証対象",    "type": "text",
+            "help": "統合テストで検証するコンポーネントの組み合わせ。例: 「ARC-001 + ARC-002 + ARC-003」" }
         ]
       },
       {
         "id": "strategy", "title": "統合戦略",
+        "help": "どの順番でコンポーネントを統合してテストするかを定義する。",
         "fields": [
-          { "id": "approach",    "label": "統合方式",    "type": "select", "options": ["ボトムアップ","トップダウン","ビッグバン"] },
-          { "id": "stubPolicy",  "label": "スタブ方針",  "type": "textarea" },
-          { "id": "environment", "label": "テスト環境",  "type": "textarea" }
+          { "id": "approach",    "label": "統合方式",    "type": "select", "options": ["ボトムアップ","トップダウン","ビッグバン"],
+            "help": "ボトムアップ=下位コンポーネントから順に統合（スタブ不要）/ トップダウン=上位から統合（スタブ必要）/ ビッグバン=一度に全統合" },
+          { "id": "stubPolicy",  "label": "スタブ方針",  "type": "textarea",
+            "help": "未完成コンポーネントの代替となるスタブ・ドライバの実装方針。" },
+          { "id": "environment", "label": "テスト環境",  "type": "textarea",
+            "help": "統合テスト環境の構成。HW・OS・ミドルウェアのバージョン等。" }
         ]
       },
       {
         "id": "testcases", "title": "テストケース", "type": "itemList",
+        "help": "コンポーネント間のインターフェースと連携動作を検証するテストケースを記述する。",
         "itemFields": [
-          { "id": "id",           "label": "TC-ID",     "type": "text", "placeholder": "TC-INT-001" },
-          { "id": "target",       "label": "テスト対象","type": "text" },
-          { "id": "perspective",  "label": "検証観点",  "type": "select", "options": ["正常系","異常系","エラー伝搬","タイミング"] },
-          { "id": "precondition", "label": "事前条件",  "type": "textarea" },
-          { "id": "steps",        "label": "手順",      "type": "textarea" },
-          { "id": "expected",     "label": "期待結果",  "type": "textarea" },
-          { "id": "source",       "label": "根拠",      "type": "text" },
-          { "id": "priority",     "label": "優先度",    "type": "select", "options": ["High","Medium","Low"] }
+          { "id": "id",           "label": "TC-ID",     "type": "text", "placeholder": "TC-INT-001",
+            "help": "統合テストケースID。TC-INT-001から連番。" },
+          { "id": "target",       "label": "テスト対象","type": "partRef", "partCategory": "components",
+            "help": "検証するコンポーネントの組み合わせ。ライブラリ（コンポーネント）から選択。" },
+          { "id": "perspective",  "label": "検証観点",  "type": "select", "options": ["正常系","異常系","エラー伝搬","タイミング"],
+            "help": "正常系=正常なデータフロー確認 / 異常系=片側コンポーネント異常時の動作 / エラー伝搬=エラーの上位への伝播 / タイミング=競合・順序依存" },
+          { "id": "precondition", "label": "事前条件",  "type": "textarea",
+            "help": "テスト実施前の初期状態・前提条件" },
+          { "id": "steps",        "label": "手順",      "type": "textarea",
+            "help": "テスト手順を番号付きリストで記述。例:\n1. ARC-001を初期化する\n2. ARC-002にデータを送信する\n3. ARC-001の出力を確認する" },
+          { "id": "expected",     "label": "期待結果",  "type": "textarea",
+            "help": "正しい統合状態で得られる結果。コンポーネント間のデータ整合性も確認すること。" },
+          { "id": "source",       "label": "根拠",      "type": "text",
+            "help": "このテストケースの根拠となるSWR・IFC IDなど。例: 「IFC-003, SWR-005」" },
+          { "id": "priority",     "label": "優先度",    "type": "select", "options": ["High","Medium","Low"],
+            "help": "High=安全機能・主要インターフェース / Medium=補助機能 / Low=補完テスト" }
         ]
       }
     ]
@@ -292,32 +456,44 @@
       {
         "id": "header", "title": "基本情報",
         "fields": [
-          { "id": "title",       "label": "タイトル",     "type": "text", "required": true },
-          { "id": "version",     "label": "バージョン",   "type": "text" },
-          { "id": "status",      "label": "ステータス",   "type": "select", "options": ["Draft","Under Review","Approved"] },
-          { "id": "testDate",    "label": "実施日",       "type": "text" },
-          { "id": "tester",      "label": "実施者",       "type": "text" },
-          { "id": "swVersion",   "label": "SW バージョン","type": "text" }
+          { "id": "title",     "label": "タイトル",       "type": "text", "required": true,
+            "help": "対応するITSのタイトルと合わせること。" },
+          { "id": "version",   "label": "バージョン",     "type": "text",
+            "help": "実施したITSのバージョンと一致させること。" },
+          { "id": "status",    "label": "ステータス",     "type": "select", "options": ["Draft","Under Review","Approved"],
+            "help": "全テストがPASSし不具合が解消されてから Approved にすること。" },
+          { "id": "testDate",  "label": "実施日",         "type": "text",
+            "help": "テスト実施日。YYYY-MM-DD形式。" },
+          { "id": "tester",    "label": "実施者",         "type": "text",
+            "help": "統合テストを実施した担当者の氏名" },
+          { "id": "swVersion", "label": "SW バージョン",  "type": "text",
+            "help": "テスト対象のSWバージョン（gitタグ等）。" }
         ]
       },
       {
         "id": "results", "title": "テストケース結果", "type": "itemList",
+        "help": "ITSの各テストケースに対して実測結果を記録する。",
         "itemFields": [
-          { "id": "tcId",    "label": "TC-ID",  "type": "text" },
-          { "id": "target",  "label": "対象",   "type": "text" },
-          { "id": "verdict", "label": "判定",   "type": "select", "options": ["PASS","FAIL","BLOCKED","N/A"] },
-          { "id": "actual",  "label": "実測値", "type": "text" },
-          { "id": "bugId",   "label": "不具合", "type": "text" },
-          { "id": "note",    "label": "備考",   "type": "text" }
+          { "id": "tcId",    "label": "TC-ID",  "type": "text", "help": "実施したテストケースID" },
+          { "id": "target",  "label": "対象",   "type": "text", "help": "テスト対象のコンポーネント組み合わせ" },
+          { "id": "verdict", "label": "判定",   "type": "select", "options": ["PASS","FAIL","BLOCKED","N/A"],
+            "help": "PASS/FAIL/BLOCKED/N/A" },
+          { "id": "actual",  "label": "実測値", "type": "text", "help": "実際の出力・状態" },
+          { "id": "bugId",   "label": "不具合", "type": "text", "help": "FAILの場合の不具合ID" },
+          { "id": "note",    "label": "備考",   "type": "text", "help": "特記事項" }
         ]
       },
       {
         "id": "bugs", "title": "不具合一覧", "type": "itemList",
+        "help": "統合テストで発見した不具合を記録する。",
         "itemFields": [
-          { "id": "id",       "label": "BUG-ID", "type": "text" },
-          { "id": "severity", "label": "重要度", "type": "select", "options": ["Critical","Major","Minor"] },
-          { "id": "symptom",  "label": "症状",   "type": "textarea" },
-          { "id": "status",   "label": "状態",   "type": "select", "options": ["Open","In Progress","Fixed","Closed"] }
+          { "id": "id",       "label": "BUG-ID", "type": "text", "placeholder": "BUG-001",
+            "help": "不具合ID。BUG-001から連番。" },
+          { "id": "severity", "label": "重要度", "type": "select", "options": ["Critical","Major","Minor"],
+            "help": "Critical=安全機能影響 / Major=主要機能影響 / Minor=軽微" },
+          { "id": "symptom",  "label": "症状",   "type": "textarea", "help": "発生した現象の詳細" },
+          { "id": "status",   "label": "状態",   "type": "select", "options": ["Open","In Progress","Fixed","Closed"],
+            "help": "Open/In Progress/Fixed/Closed" }
         ]
       }
     ]
@@ -330,34 +506,54 @@
       {
         "id": "header", "title": "基本情報",
         "fields": [
-          { "id": "title",    "label": "タイトル",  "type": "text", "required": true },
-          { "id": "version",  "label": "バージョン","type": "text" },
-          { "id": "status",   "label": "ステータス","type": "select", "options": ["Draft","Under Review","Approved"] },
-          { "id": "author",   "label": "作成者",    "type": "text" },
-          { "id": "scope",    "label": "検証対象",  "type": "text" }
+          { "id": "title",   "label": "タイトル",    "type": "text", "required": true,
+            "help": "例: 「ECU制御SW 適格性確認テスト仕様書」" },
+          { "id": "version", "label": "バージョン",  "type": "text",
+            "help": "X.Y形式。SRS（SWR）が変更されたら対応するQTSも更新すること。" },
+          { "id": "status",  "label": "ステータス",  "type": "select", "options": ["Draft","Under Review","Approved"],
+            "help": "顧客・承認者のレビュー後に Approved にすること。" },
+          { "id": "author",  "label": "作成者",      "type": "text",
+            "help": "適格性確認テストの主担当者（SRS作成者と異なる担当者が望ましい）" },
+          { "id": "scope",   "label": "検証対象",    "type": "text",
+            "help": "検証するSWのバージョン・システム構成。例: 「ECU制御SW v2.0全機能」" }
         ]
       },
       {
         "id": "testcases", "title": "テストケース", "type": "itemList",
+        "help": "SRSの各要件（SWR）を検証するテストケースを定義する。全Mustの要件を網羅すること。",
         "itemFields": [
-          { "id": "id",           "label": "TC-ID",     "type": "text", "placeholder": "TC-QAL-001" },
-          { "id": "target",       "label": "テスト対象 SWR","type": "text" },
-          { "id": "perspective",  "label": "検証観点",  "type": "select", "options": ["機能確認","性能確認","境界値","異常系","セキュリティ"] },
-          { "id": "precondition", "label": "事前条件",  "type": "textarea" },
-          { "id": "steps",        "label": "手順",      "type": "textarea" },
-          { "id": "expected",     "label": "期待結果",  "type": "textarea" },
-          { "id": "source",       "label": "根拠 SWR",  "type": "text" },
-          { "id": "priority",     "label": "優先度",    "type": "select", "options": ["High","Medium","Low"] },
-          { "id": "testType",     "label": "テスト種別","type": "select", "options": ["手動","自動","半自動"] }
+          { "id": "id",           "label": "TC-ID",          "type": "text", "placeholder": "TC-QAL-001",
+            "help": "適格性確認テストケースID。TC-QAL-001から連番。" },
+          { "id": "target",       "label": "検証対象 SWR",   "type": "text",
+            "help": "このテストケースが検証するSWRのID。例: 「SWR-001」" },
+          { "id": "perspective",  "label": "検証観点",       "type": "select", "options": ["機能確認","性能確認","境界値","異常系","セキュリティ"],
+            "help": "機能確認=要件通りに動作するか / 性能確認=目標値を達成するか / 境界値=上限・下限の動作 / 異常系=エラー時の動作 / セキュリティ=セキュリティ要件の検証" },
+          { "id": "precondition", "label": "事前条件",       "type": "textarea",
+            "help": "テスト実施前の前提。例: 「SWをターゲットHWにフラッシュ済みであること」" },
+          { "id": "steps",        "label": "手順",           "type": "textarea",
+            "help": "テスト手順を番号付きで記述。システムレベルの操作を具体的に。" },
+          { "id": "expected",     "label": "期待結果",       "type": "textarea",
+            "help": "SRSの受入基準を満たすと判断できる具体的な観測結果。" },
+          { "id": "source",       "label": "根拠 SWR",       "type": "text",
+            "help": "検証対象のSWR ID。例: 「SWR-001」（targetと同じ場合は省略可）" },
+          { "id": "priority",     "label": "優先度",         "type": "select", "options": ["High","Medium","Low"],
+            "help": "High=Must要件 / Medium=Should要件 / Low=Nice-to-have要件" },
+          { "id": "testType",     "label": "テスト種別",     "type": "select", "options": ["手動","自動","半自動"],
+            "help": "手動=テスターが手動で実施 / 自動=スクリプト・ツールで自動実施 / 半自動=一部手動操作が必要" }
         ]
       },
       {
         "id": "coverage", "title": "SWR カバレッジ", "type": "itemList",
+        "help": "全SWRに対してテストケースが割り当てられているかを確認するマトリクス。全Mustに割り当てがあること。",
         "itemFields": [
-          { "id": "swrId",    "label": "SWR-ID",   "type": "text" },
-          { "id": "swrTitle", "label": "SWR タイトル","type": "text" },
-          { "id": "priority", "label": "優先度",   "type": "select", "options": ["Must","Should","Nice-to-have"] },
-          { "id": "tcId",     "label": "割り当て TC","type": "text" }
+          { "id": "swrId",    "label": "SWR-ID",       "type": "text",
+            "help": "SRSに定義されたSWRのID。例: 「SWR-001」" },
+          { "id": "swrTitle", "label": "SWR タイトル", "type": "text",
+            "help": "SWRのタイトル（SRSから転記）" },
+          { "id": "priority", "label": "優先度",       "type": "select", "options": ["Must","Should","Nice-to-have"],
+            "help": "SRSで定義された優先度（SRSから転記）" },
+          { "id": "tcId",     "label": "割り当て TC",  "type": "text",
+            "help": "このSWRを検証するTC-IDをカンマ区切りで。例: 「TC-QAL-001, TC-QAL-005」" }
         ]
       }
     ]
@@ -370,30 +566,42 @@
       {
         "id": "header", "title": "基本情報",
         "fields": [
-          { "id": "title",       "label": "タイトル",     "type": "text", "required": true },
-          { "id": "version",     "label": "バージョン",   "type": "text" },
-          { "id": "status",      "label": "ステータス",   "type": "select", "options": ["Draft","Under Review","Approved"] },
-          { "id": "testDate",    "label": "実施日",       "type": "text" },
-          { "id": "tester",      "label": "実施者",       "type": "text" },
-          { "id": "swVersion",   "label": "SW バージョン","type": "text" }
+          { "id": "title",     "label": "タイトル",       "type": "text", "required": true,
+            "help": "対応するQTSのタイトルと合わせること。" },
+          { "id": "version",   "label": "バージョン",     "type": "text",
+            "help": "実施したQTSのバージョンと一致させること。" },
+          { "id": "status",    "label": "ステータス",     "type": "select", "options": ["Draft","Under Review","Approved"],
+            "help": "リリース判定が「リリース可」になってから Approved にすること。" },
+          { "id": "testDate",  "label": "実施日",         "type": "text",
+            "help": "テスト完了日。YYYY-MM-DD形式。" },
+          { "id": "tester",    "label": "実施者",         "type": "text",
+            "help": "適格性確認テストを実施した担当者" },
+          { "id": "swVersion", "label": "SW バージョン",  "type": "text",
+            "help": "リリース候補のSWバージョン。例: 「v2.0.0-rc1」" }
         ]
       },
       {
         "id": "results", "title": "テストケース結果", "type": "itemList",
+        "help": "QTSの全テストケースに対して実測結果を記録する。",
         "itemFields": [
-          { "id": "tcId",    "label": "TC-ID",  "type": "text" },
-          { "id": "target",  "label": "SWR",    "type": "text" },
-          { "id": "verdict", "label": "判定",   "type": "select", "options": ["PASS","FAIL","BLOCKED","N/A"] },
-          { "id": "actual",  "label": "実測値", "type": "text" },
-          { "id": "bugId",   "label": "不具合", "type": "text" }
+          { "id": "tcId",    "label": "TC-ID",  "type": "text", "help": "実施したテストケースID" },
+          { "id": "target",  "label": "SWR",    "type": "text", "help": "対応するSWRのID" },
+          { "id": "verdict", "label": "判定",   "type": "select", "options": ["PASS","FAIL","BLOCKED","N/A"],
+            "help": "PASS/FAIL/BLOCKED/N/A" },
+          { "id": "actual",  "label": "実測値", "type": "text", "help": "実際の観測結果" },
+          { "id": "bugId",   "label": "不具合", "type": "text", "help": "FAILの場合の不具合ID" }
         ]
       },
       {
         "id": "releaseDecision", "title": "リリース判定",
+        "help": "全テスト完了後に記入する。承認者が判定し署名すること。",
         "fields": [
-          { "id": "decision",    "label": "判定結果",     "type": "select", "options": ["リリース可","条件付きリリース可","リリース不可"] },
-          { "id": "swrCoverage", "label": "SWR カバレッジ","type": "text" },
-          { "id": "conditions",  "label": "残課題・条件", "type": "textarea" }
+          { "id": "decision",    "label": "判定結果",      "type": "select", "options": ["リリース可","条件付きリリース可","リリース不可"],
+            "help": "リリース可=全Must要件PASS・未解決不具合なし / 条件付きリリース可=Minor不具合のみ残存・顧客合意あり / リリース不可=Critical/Major不具合が残存" },
+          { "id": "swrCoverage", "label": "SWR カバレッジ","type": "text",
+            "help": "全SWRに対するテスト実施率。例: 「Must:100%、Should:85%、全体:92%」" },
+          { "id": "conditions",  "label": "残課題・条件",  "type": "textarea",
+            "help": "条件付きリリース可の場合の残課題と次バージョンでの対応方針。" }
         ]
       }
     ]

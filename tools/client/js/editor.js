@@ -4,7 +4,13 @@ let currentDoc = null;
 let currentSchema = null;
 const undo = new UndoManager();
 
-window.addEventListener('workspace-needed', () => { Utils.toast('ワークスペースを設定してください', 'error'); });
+// ライブラリ: { category: [{ id, name, description, tags }] }
+let libraryData = {};
+
+// undoのデバウンスタイマー
+let _undoTimer = null;
+
+window.addEventListener('workspace-needed', openWsModal);
 window.addEventListener('undo-state-changed', e => {
   document.getElementById('undoBtn').disabled = !e.detail.canUndo;
   document.getElementById('redoBtn').disabled = !e.detail.canRedo;
@@ -14,23 +20,43 @@ document.addEventListener('keydown', e => {
   if (e.ctrlKey && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) { e.preventDefault(); doRedo(); }
   if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveDoc(); }
 });
+document.addEventListener('click', e => {
+  if (!e.target.classList.contains('help-icon')) {
+    document.querySelectorAll('.help-popup').forEach(p => p.remove());
+  }
+});
 
 async function init() {
   schemas = await fetch('/schemas/document_types.json').then(r => r.json());
-  await loadSidebar();
+  await Promise.all([loadSidebar(), loadLibrary()]);
 
   const p = new URLSearchParams(location.search);
-  if (p.get('id') && p.get('type')) {
-    // 新規作成モード
-    const typeKey = p.get('type');
-    const id = p.get('id');
-    const s = schemas[typeKey];
-    if (s) createNewDocument(id, typeKey);
-  } else if (p.get('id')) {
+  if (p.get('id')) {
     openDocument(p.get('id'));
   } else if (p.get('process')) {
-    // プロセスでフィルタ
     filterSidebar('', p.get('process'));
+  }
+}
+
+async function loadLibrary() {
+  try {
+    const cats = await API.getLibraryCategories();
+    const results = await Promise.all(cats.map(c =>
+      API.getLibraryItems(c.id).then(r => ({ id: c.id, items: r.items }))
+    ));
+    libraryData = {};
+    for (const r of results) libraryData[r.id] = r.items;
+    injectDataLists();
+  } catch { /* ライブラリ未設定時は無視 */ }
+}
+
+function injectDataLists() {
+  document.querySelectorAll('datalist[id^="lib-"]').forEach(el => el.remove());
+  for (const [cat, items] of Object.entries(libraryData)) {
+    const dl = document.createElement('datalist');
+    dl.id = `lib-${cat}`;
+    dl.innerHTML = items.map(it => `<option value="${Utils.escapeHtml(it.name)}">${Utils.escapeHtml(it.description || '')}</option>`).join('');
+    document.body.appendChild(dl);
   }
 }
 
@@ -53,8 +79,12 @@ function renderSidebar(docs) {
     const pd = byProc[proc] || [];
     return `<div class="process-group">
       <div class="process-label" onclick="toggleGroup(this)">
-        <span class="arrow">▾</span> ${proc}
-        <span class="badge badge-draft" style="margin-left:auto">${pd.length}</span>
+        <span class="process-label-left">
+          <span class="arrow">▾</span> ${proc}
+        </span>
+        <button class="proc-new-btn" title="${proc} の新規ドキュメント作成"
+          onclick="event.stopPropagation();openNewDocModalFor('${proc}')">+</button>
+        <span class="badge badge-draft" style="margin-left:4px">${pd.length}</span>
       </div>
       <div class="process-docs">
         ${pd.map(d => `
@@ -76,8 +106,7 @@ function filterSidebar(q, procFilter) {
 
 function toggleGroup(el) {
   el.classList.toggle('collapsed');
-  const docs = el.nextElementSibling;
-  docs.style.display = el.classList.contains('collapsed') ? 'none' : '';
+  el.nextElementSibling.style.display = el.classList.contains('collapsed') ? 'none' : '';
 }
 
 async function openDocument(id) {
@@ -85,49 +114,37 @@ async function openDocument(id) {
     currentDoc = await API.getDocument(id);
     currentSchema = findSchema(currentDoc.type, currentDoc.process);
     undo.clear();
-    undo.push(currentDoc.content);
+    undo.push(JSON.parse(JSON.stringify(currentDoc.content)));
     renderEditor();
     updateHeader();
     history.replaceState(null,'',`/editor?id=${id}`);
-  } catch (e) { Utils.toast('読み込みエラー: ' + e.message, 'error'); }
+  } catch (e) {
+    Utils.toast('読み込みエラー: ' + e.message, 'error');
+    console.error('openDocument error:', e);
+  }
 }
 
 function findSchema(type, process) {
-  const key = `${process}_${type}`;
-  return schemas[key] || null;
-}
-
-function createNewDocument(id, typeKey) {
-  const s = schemas[typeKey];
-  currentDoc = {
-    id, type: s.idPrefix, process: s.process, title: s.label,
-    version: '1.0', status: 'Draft',
-    created: new Date().toISOString().slice(0,10),
-    author: '', approver: '', upstream: [], downstream: [],
-    content: { title: s.label, version: '1.0', status: 'Draft' },
-    changelog: []
-  };
-  currentSchema = s;
-  undo.clear();
-  undo.push(currentDoc.content);
-  renderEditor();
-  updateHeader();
-  document.getElementById('deleteBtn').style.display = 'none';
+  return schemas[`${process}_${type}`] || null;
 }
 
 function updateHeader() {
-  if (!currentDoc) return;
+  if (!currentDoc) {
+    document.getElementById('docId').textContent = '';
+    document.getElementById('docTitle').textContent = 'ドキュメントを選択してください';
+    document.getElementById('docBadge').className = 'badge';
+    document.getElementById('docBadge').textContent = '';
+    document.getElementById('deleteBtn').style.display = 'none';
+    return;
+  }
   document.getElementById('docId').textContent = currentDoc.id;
   document.getElementById('docTitle').textContent = currentDoc.title || currentDoc.id;
   const badge = document.getElementById('docBadge');
   badge.className = 'badge ' + Utils.statusClass(currentDoc.status);
   badge.textContent = Utils.statusLabel(currentDoc.status);
-  document.getElementById('deleteBtn').style.display = currentDoc.changelog && currentDoc.changelog.length > 0 ? '' : 'none';
-  // サイドバー更新
-  const items = document.querySelectorAll('.doc-item');
-  items.forEach(el => el.classList.remove('active'));
+  document.getElementById('deleteBtn').style.display = '';
   document.querySelectorAll('.doc-item').forEach(el => {
-    if (el.textContent.includes(currentDoc.title || currentDoc.id)) el.classList.add('active');
+    el.classList.toggle('active', el.querySelector('.doc-title')?.textContent === (currentDoc.title || currentDoc.id));
   });
 }
 
@@ -146,7 +163,9 @@ function renderEditor() {
         <div id="mdPreview" class="card" style="padding:16px;overflow-y:auto">${renderMarkdown(docToMarkdown())}</div>
       </div>
     </div>`;
+  injectDataLists();
   attachDrag();
+  initDiagramPreviews();
 }
 
 function switchTab(el, tab) {
@@ -170,8 +189,11 @@ function renderForm() {
 
 function renderFieldSection(sec) {
   const c = currentDoc.content;
+  const helpHtml = sec.help ? `<span class="help-icon" onclick="showHelp(event,this,'${escAttr(sec.help)}')">?</span>` : '';
   return `<div class="form-section">
-    <div class="form-section-title">${Utils.escapeHtml(sec.title)}</div>
+    <div class="form-section-title">
+      <span class="field-label-row">${Utils.escapeHtml(sec.title)}${helpHtml}</span>
+    </div>
     <div class="form-row">
       ${sec.fields.map(f => renderField(f, c[f.id] || '')).join('')}
     </div>
@@ -179,21 +201,57 @@ function renderFieldSection(sec) {
 }
 
 function renderField(f, value) {
-  const base = `id="f_${f.id}" onchange="onFieldChange('${f.id}',this.value)"`;
+  const domId = `f_${f.id}`;
+  const helpHtml = f.help ? `<span class="help-icon" onclick="showHelp(event,this,'${escAttr(f.help)}')">?</span>` : '';
+  const labelHtml = `<span class="field-label-row"><label for="${domId}">${Utils.escapeHtml(f.label)}</label>${helpHtml}</span>`;
+  const onInput = `oninput="onFieldChange('${f.id}',this.value)"`;
+
   if (f.type === 'select') {
     const opts = f.options.map(o => `<option value="${o}"${value===o?' selected':''}>${o}</option>`).join('');
-    return `<div class="form-field"><label>${Utils.escapeHtml(f.label)}</label><select ${base}>${opts}</select></div>`;
+    return `<div class="form-field">${labelHtml}<select id="${domId}" onchange="onFieldChange('${f.id}',this.value)">${opts}</select></div>`;
   }
   if (f.type === 'textarea') {
-    return `<div class="form-field" style="grid-column:1/-1"><label>${Utils.escapeHtml(f.label)}</label><textarea ${base} rows="3">${Utils.escapeHtml(value)}</textarea></div>`;
+    return `<div class="form-field" style="grid-column:1/-1">${labelHtml}<textarea id="${domId}" ${onInput} rows="3">${Utils.escapeHtml(value)}</textarea></div>`;
   }
-  return `<div class="form-field"><label>${Utils.escapeHtml(f.label)}</label><input type="text" ${base} value="${Utils.escapeHtml(value)}" placeholder="${Utils.escapeHtml(f.placeholder||'')}"></div>`;
+  if (f.type === 'diagram') {
+    const previewId = `diagramPreview_${f.id}`;
+    return `<div class="form-field diagram-field" style="grid-column:1/-1">
+      ${labelHtml}
+      <div class="diagram-editor-wrap">
+        <textarea id="${domId}" class="diagram-textarea" rows="8"
+          placeholder="Mermaid記法でダイアグラムを入力…\n例:\ngraph TD\n  A[コンポーネントA] --> B[コンポーネントB]"
+          ${onInput}>${Utils.escapeHtml(value)}</textarea>
+        <div class="diagram-preview-panel">
+          <div class="diagram-preview-label">プレビュー
+            <button class="btn btn-sm btn-ghost" onclick="refreshDiagramPreview('${domId}','${previewId}')">↻ 更新</button>
+          </div>
+          <div id="${previewId}" class="diagram-preview"></div>
+        </div>
+      </div>
+    </div>`;
+  }
+  if (f.type === 'partRef') {
+    const listId = `lib-${f.partCategory || ''}`;
+    return `<div class="form-field">
+      ${labelHtml}
+      <div class="partref-wrapper">
+        <input type="text" id="${domId}" list="${listId}" value="${Utils.escapeHtml(value)}"
+          placeholder="${Utils.escapeHtml(f.placeholder || 'ライブラリから選択または入力')}"
+          ${onInput}>
+        <a class="lib-link" href="/library" target="_blank" title="ライブラリを開く">⊞</a>
+      </div>
+    </div>`;
+  }
+  return `<div class="form-field">${labelHtml}<input type="text" id="${domId}" value="${Utils.escapeHtml(value)}" placeholder="${Utils.escapeHtml(f.placeholder||'')}" ${onInput}></div>`;
 }
 
 function renderItemListSection(sec) {
   const items = currentDoc.content[sec.id] || [];
+  const helpHtml = sec.help ? `<span class="help-icon" onclick="showHelp(event,this,'${escAttr(sec.help)}')">?</span>` : '';
   return `<div class="form-section" id="sec_${sec.id}">
-    <div class="form-section-title">${Utils.escapeHtml(sec.title)}</div>
+    <div class="form-section-title">
+      <span class="field-label-row">${Utils.escapeHtml(sec.title)}${helpHtml}</span>
+    </div>
     <div class="item-list" id="list_${sec.id}">
       ${items.map((item, i) => renderItemRow(sec, item, i)).join('')}
     </div>
@@ -214,40 +272,79 @@ function renderItemRow(sec, item, index) {
   </div>`;
 }
 
+// ── Mermaidダイアグラム ──
+function initDiagramPreviews() {
+  document.querySelectorAll('.diagram-textarea').forEach(ta => {
+    const previewId = 'diagramPreview_' + ta.id.replace('f_', '');
+    if (ta.value.trim()) refreshDiagramPreview(ta.id, previewId);
+  });
+}
+
+async function refreshDiagramPreview(inputId, previewId) {
+  const code = document.getElementById(inputId)?.value?.trim();
+  const panel = document.getElementById(previewId);
+  if (!panel) return;
+  if (!code) { panel.innerHTML = '<span style="color:var(--text-dim);font-size:12px">（コードを入力するとプレビューが表示されます）</span>'; return; }
+  try {
+    panel.innerHTML = '';
+    const { svg } = await mermaid.render('mermaid_' + previewId, code);
+    panel.innerHTML = svg;
+    panel.onclick = () => Utils.openDiagramModal(svg);
+  } catch (e) {
+    panel.innerHTML = `<span style="color:var(--red);font-size:12px">構文エラー: ${Utils.escapeHtml(e.message || String(e))}</span>`;
+  }
+}
+
+// ── ヘルプポップアップ ──
+function showHelp(evt, iconEl, helpText) {
+  evt.stopPropagation();
+  document.querySelectorAll('.help-popup').forEach(p => p.remove());
+  const popup = document.createElement('div');
+  popup.className = 'help-popup';
+  popup.textContent = helpText.replace(/\\n/g, '\n');
+  iconEl.style.position = 'relative';
+  iconEl.appendChild(popup);
+  const rect = iconEl.getBoundingClientRect();
+  popup.className = 'help-popup ' + (rect.bottom + 200 > window.innerHeight ? 'above' : 'below');
+}
+
+function escAttr(str) {
+  return (str || '').replace(/\\/g, '\\\\').replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/\n/g, '\\n');
+}
+
+// ── フィールド変更ハンドラ ──
 function onFieldChange(fieldId, value) {
-  // fieldId パターン: 単純フィールド → "title", アイテムフィールド → "requirements_0_description"
-  const parts = fieldId.split('_');
-  if (parts.length === 1) {
-    // ヘッダーフィールド or 非リストセクション
-    currentDoc.content[fieldId] = value;
-    if (fieldId === 'title') currentDoc.title = value;
-    if (fieldId === 'status') currentDoc.status = value;
-    if (fieldId === 'version') currentDoc.version = value;
-    if (fieldId === 'author') currentDoc.author = value;
-    if (fieldId === 'approver') currentDoc.approver = value;
-  } else {
-    // アイテムリストフィールド: secId_index_fieldId
-    const secId = parts[0];
-    const idx = parseInt(parts[1]);
-    const fid = parts.slice(2).join('_');
+  const match = fieldId.match(/^(.+?)_(\d+)_(.+)$/);
+  if (match) {
+    const [, secId, idxStr, fid] = match;
+    const idx = parseInt(idxStr);
     if (!currentDoc.content[secId]) currentDoc.content[secId] = [];
     if (!currentDoc.content[secId][idx]) currentDoc.content[secId][idx] = {};
     currentDoc.content[secId][idx][fid] = value;
+  } else {
+    currentDoc.content[fieldId] = value;
+    if (fieldId === 'title')    currentDoc.title    = value;
+    if (fieldId === 'status')   currentDoc.status   = value;
+    if (fieldId === 'version')  currentDoc.version  = value;
+    if (fieldId === 'author')   currentDoc.author   = value;
+    if (fieldId === 'approver') currentDoc.approver = value;
+    updateHeader();
   }
-  updateHeader();
-  undo.push(currentDoc.content);
+  // undo はデバウンスして頻繁な push を抑制
+  clearTimeout(_undoTimer);
+  _undoTimer = setTimeout(() => undo.push(JSON.parse(JSON.stringify(currentDoc.content))), 600);
 }
 
 function addItem(secId) {
   if (!currentDoc.content[secId]) currentDoc.content[secId] = [];
   currentDoc.content[secId].push({});
-  undo.push(currentDoc.content);
+  undo.push(JSON.parse(JSON.stringify(currentDoc.content)));
   reRenderSection(secId);
 }
 
 function removeItem(secId, index) {
   currentDoc.content[secId].splice(index, 1);
-  undo.push(currentDoc.content);
+  undo.push(JSON.parse(JSON.stringify(currentDoc.content)));
   reRenderSection(secId);
 }
 
@@ -263,7 +360,7 @@ function reRenderSection(secId) {
 function attachDrag() {
   let dragSrc = null;
   document.querySelectorAll('.item-row').forEach(row => {
-    row.addEventListener('dragstart', e => { dragSrc = row; row.classList.add('dragging'); });
+    row.addEventListener('dragstart', () => { dragSrc = row; row.classList.add('dragging'); });
     row.addEventListener('dragend',   () => { dragSrc = null; row.classList.remove('dragging'); });
     row.addEventListener('dragover',  e => { e.preventDefault(); row.classList.add('drag-over'); });
     row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
@@ -271,13 +368,13 @@ function attachDrag() {
       e.preventDefault();
       row.classList.remove('drag-over');
       if (!dragSrc || dragSrc === row) return;
-      const secId = row.dataset.sec;
+      const secId   = row.dataset.sec;
       const fromIdx = parseInt(dragSrc.dataset.idx);
       const toIdx   = parseInt(row.dataset.idx);
       const arr = currentDoc.content[secId];
       const [item] = arr.splice(fromIdx, 1);
       arr.splice(toIdx, 0, item);
-      undo.push(currentDoc.content);
+      undo.push(JSON.parse(JSON.stringify(currentDoc.content)));
       reRenderSection(secId);
     });
   });
@@ -286,32 +383,101 @@ function attachDrag() {
 // ── アンドゥ/リドゥ ──
 function doUndo() {
   const prev = undo.undo();
-  if (prev !== null) { currentDoc.content = prev; renderEditor(); updateHeader(); }
+  if (prev !== null) { currentDoc.content = JSON.parse(JSON.stringify(prev)); renderEditor(); updateHeader(); }
 }
 function doRedo() {
   const next = undo.redo();
-  if (next !== null) { currentDoc.content = next; renderEditor(); updateHeader(); }
+  if (next !== null) { currentDoc.content = JSON.parse(JSON.stringify(next)); renderEditor(); updateHeader(); }
 }
 
 // ── 保存・削除 ──
 async function saveDoc() {
   if (!currentDoc) return;
   try {
-    const existing = await API.getDocument(currentDoc.id).catch(() => null);
-    if (existing) await API.updateDocument(currentDoc.id, currentDoc);
-    else          await API.createDocument(currentDoc);
+    await API.updateDocument(currentDoc.id, currentDoc);
     Utils.toast('保存しました', 'success');
     await loadSidebar();
-  } catch (e) { Utils.toast('保存エラー: ' + e.message, 'error'); }
+  } catch (e) {
+    Utils.toast('保存エラー: ' + e.message, 'error');
+    console.error('saveDoc error:', e);
+  }
 }
 
 async function deleteDoc() {
   if (!currentDoc) return;
-  await API.deleteDocument(currentDoc.id);
-  Utils.toast('削除しました');
-  currentDoc = null;
-  document.getElementById('editorMain').innerHTML = '<div class="empty-state"><div class="icon">📄</div><p>削除されました</p></div>';
-  updateHeader();
+  try {
+    await API.deleteDocument(currentDoc.id);
+    Utils.toast('削除しました。IDを自動で整列します...');
+    currentDoc = null;
+    currentSchema = null;
+    document.getElementById('editorMain').innerHTML = '<div class="empty-state"><div class="icon">📄</div><p>削除されました</p></div>';
+    updateHeader();
+    await loadSidebar();
+  } catch (e) {
+    Utils.toast('削除エラー: ' + e.message, 'error');
+    console.error('deleteDoc error:', e);
+  }
+}
+
+// ── 新規作成 ──
+function openNewDocModalFor(filterProc) {
+  const entries = Object.entries(schemas).filter(([, s]) => !filterProc || s.process === filterProc);
+  if (entries.length === 0) return;
+  if (entries.length === 1) { createNewDoc(entries[0][0]); return; }
+  const grid = document.getElementById('doctypeGrid');
+  grid.innerHTML = entries.map(([key, s]) => `
+    <button class="doctype-btn" onclick="createNewDoc('${key}')">
+      <div class="doctype-proc">${s.process}</div>
+      <div class="doctype-name">${s.label}</div>
+    </button>`).join('');
+  document.getElementById('newDocModal').style.display = 'flex';
+}
+
+function openNewDocModal() { openNewDocModalFor(null); }
+function closeNewDocModal() { document.getElementById('newDocModal').style.display = 'none'; }
+
+async function createNewDoc(typeKey) {
+  closeNewDocModal();
+  try {
+    const s = schemas[typeKey];
+    const { documents } = await API.listDocuments().catch(() => ({ documents: [] }));
+    const existingIds = documents.filter(d => d.type === s.idPrefix).map(d => d.id);
+    const id = Utils.generateId(s.idPrefix, existingIds);
+    // サーバーに即時保存してからエディターで開く
+    const doc = {
+      id, type: s.idPrefix, process: s.process,
+      title: s.label, version: '1.0', status: 'Draft',
+      created: new Date().toISOString().slice(0, 10),
+      upstream: [], downstream: [],
+      content: { title: s.label, version: '1.0', status: 'Draft' },
+      changelog: []
+    };
+    await API.createDocument(doc);
+    await loadSidebar();
+    await openDocument(id);
+    history.replaceState(null, '', `/editor?id=${id}`);
+  } catch (e) {
+    Utils.toast('作成エラー: ' + e.message, 'error');
+    console.error('createNewDoc error:', e);
+  }
+}
+
+// ── ワークスペース設定モーダル（editor にも設置） ──
+function openWsModal()  {
+  const modal = document.getElementById('wsModal');
+  if (modal) modal.style.display = 'flex';
+}
+function closeWsModal() {
+  const modal = document.getElementById('wsModal');
+  if (modal) modal.style.display = 'none';
+}
+async function saveWorkspace() {
+  const p  = document.getElementById('wsPathInput').value.trim();
+  const id = document.getElementById('wsProjectId').value.trim();
+  if (!p) return;
+  await API.setWorkspace(p, id);
+  closeWsModal();
+  Utils.toast('ワークスペースを保存しました', 'success');
   await loadSidebar();
 }
 
@@ -353,7 +519,6 @@ function syncFromMarkdown(md) {
 }
 
 function renderMarkdown(md) {
-  // シンプルな Markdown レンダラ (marked.js CDN なしでも動作)
   return md
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/^# (.+)$/gm,   '<h1>$1</h1>')
@@ -370,28 +535,6 @@ function renderMarkdown(md) {
     .replace(/^_(.+)_$/gm, '<em>$1</em>')
     .replace(/\n\n/g, '</p><p>')
     .replace(/\n/g, '<br>');
-}
-
-// ── 新規作成 ──
-function openNewDocModal() {
-  const grid = document.getElementById('doctypeGrid');
-  grid.innerHTML = Object.entries(schemas).map(([key, s]) => `
-    <button class="doctype-btn" onclick="createNewDoc('${key}')">
-      <div class="doctype-proc">${s.process}</div>
-      <div class="doctype-name">${s.label}</div>
-    </button>`).join('');
-  document.getElementById('newDocModal').style.display = 'flex';
-}
-function closeNewDocModal() { document.getElementById('newDocModal').style.display = 'none'; }
-
-async function createNewDoc(typeKey) {
-  closeNewDocModal();
-  const s = schemas[typeKey];
-  const { documents } = await API.listDocuments().catch(() => ({ documents: [] }));
-  const existingIds = documents.filter(d => d.type === s.idPrefix).map(d => d.id);
-  const id = Utils.generateId(s.idPrefix, existingIds);
-  createNewDocument(id, typeKey);
-  history.replaceState(null, '', `/editor?id=${id}&type=${typeKey}`);
 }
 
 init();

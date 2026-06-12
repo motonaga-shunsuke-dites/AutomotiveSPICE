@@ -51,6 +51,8 @@ function renderGrid(docs) {
       <div class="process-card-header">
         <span class="process-card-id">${proc}</span>
         <span class="process-card-title">${Utils.processLabel(proc)}</span>
+        <button class="proc-new-btn" title="${proc} の新規ドキュメント作成"
+          onclick="event.stopPropagation();openNewDocModal('${proc}')">+</button>
         <span class="badge ${pct===100?'badge-approved':'badge-draft'}" style="margin-left:auto">${pct}%</span>
       </div>
       <div class="process-progress"><div class="process-progress-bar" style="width:${pct}%"></div></div>
@@ -85,23 +87,42 @@ async function saveWorkspace() {
 }
 
 // ── 新規作成 ──
-function openNewDocModal() {
+function openNewDocModal(filterProc) {
+  const entries = Object.entries(schemas).filter(([, s]) => !filterProc || s.process === filterProc);
+  if (entries.length === 0) return;
+  if (entries.length === 1) { createNewDoc(entries[0][0]); return; }
+
   const grid = document.getElementById('doctypeGrid');
-  grid.innerHTML = Object.entries(schemas).map(([key, s]) => `
+  grid.innerHTML = entries.map(([key, s]) => `
     <button class="doctype-btn" onclick="createNewDoc('${key}')">
       <div class="doctype-proc">${s.process}</div>
       <div class="doctype-name">${s.label}</div>
     </button>`).join('');
   document.getElementById('newDocModal').style.display = 'flex';
 }
+
 function closeNewDocModal() { document.getElementById('newDocModal').style.display = 'none'; }
 
 async function createNewDoc(typeKey) {
   closeNewDocModal();
-  const s = schemas[typeKey];
-  const existingIds = allDocs.filter(d => d.type === s.idPrefix).map(d => d.id);
-  const id = Utils.generateId(s.idPrefix, existingIds);
-  window.location = `/editor?id=${id}&type=${typeKey}`;
+  try {
+    const s = schemas[typeKey];
+    const existingIds = allDocs.filter(d => d.type === s.idPrefix).map(d => d.id);
+    const id = Utils.generateId(s.idPrefix, existingIds);
+    // サーバーに即時保存してからエディターへ遷移
+    const doc = {
+      id, type: s.idPrefix, process: s.process,
+      title: s.label, version: '1.0', status: 'Draft',
+      created: new Date().toISOString().slice(0, 10),
+      upstream: [], downstream: [],
+      content: { title: s.label, version: '1.0', status: 'Draft' },
+      changelog: []
+    };
+    await API.createDocument(doc);
+    window.location = `/editor?id=${id}`;
+  } catch (e) {
+    Utils.toast('作成エラー: ' + e.message, 'error');
+  }
 }
 
 init();

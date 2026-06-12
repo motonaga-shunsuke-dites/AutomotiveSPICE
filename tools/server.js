@@ -2,9 +2,11 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 
-const workspaceRouter = require('./routes/workspace');
-const documentsRouter = require('./routes/documents');
+const workspaceRouter   = require('./routes/workspace');
+const documentsRouter   = require('./routes/documents');
 const traceabilityRouter = require('./routes/traceability');
+const libraryRouter     = require('./routes/library');
+const requestsRouter    = require('./routes/requests');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,15 +16,19 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'client')));
 app.use('/schemas', express.static(path.join(__dirname, 'schemas')));
 
-app.use('/api/workspace', workspaceRouter);
-app.use('/api/documents', documentsRouter);
+app.use('/api/workspace',    workspaceRouter);
+app.use('/api/documents',   documentsRouter);
 app.use('/api/traceability', traceabilityRouter);
+app.use('/api/library',     libraryRouter);
+app.use('/api/requests',    requestsRouter);
 
 // SPA fallback: named routes → appropriate HTML
-app.get('/editor', (req, res) => res.sendFile(path.join(__dirname, 'client', 'editor.html')));
-app.get('/viewer', (req, res) => res.sendFile(path.join(__dirname, 'client', 'viewer.html')));
-app.get('/traceability', (req, res) => res.sendFile(path.join(__dirname, 'client', 'traceability.html')));
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'client', 'portal.html')));
+app.get('/editor',        (req, res) => res.sendFile(path.join(__dirname, 'client', 'editor.html')));
+app.get('/viewer',        (req, res) => res.sendFile(path.join(__dirname, 'client', 'viewer.html')));
+app.get('/traceability',  (req, res) => res.sendFile(path.join(__dirname, 'client', 'traceability.html')));
+app.get('/library',       (req, res) => res.sendFile(path.join(__dirname, 'client', 'library.html')));
+app.get('/requests',      (req, res) => res.sendFile(path.join(__dirname, 'client', 'requests.html')));
+app.get('/',              (req, res) => res.sendFile(path.join(__dirname, 'client', 'portal.html')));
 
 const server = app.listen(PORT, () => {
   console.log(`ASPICE Doc Tool running at http://localhost:${PORT}`);

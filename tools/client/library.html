@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ASPICE Doc Tool — Library</title>
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<nav class="navbar">
+  <span class="navbar-brand">📋 ASPICE Doc Tool</span>
+  <div class="nav-links">
+    <a href="/"             class="nav-link">Portal</a>
+    <a href="/editor"       class="nav-link">Editor</a>
+    <a href="/viewer"       class="nav-link">Viewer</a>
+    <a href="/traceability" class="nav-link">Traceability</a>
+    <a href="/library"      class="nav-link active">Library</a>
+    <a href="/requests"     class="nav-link">Requests</a>
+  </div>
+  <div class="nav-workspace">
+    <span style="font-size:12px;color:var(--text-dim)">パーツライブラリ</span>
+  </div>
+</nav>
+
+<div class="layout library-layout">
+  <!-- カテゴリサイドバー -->
+  <aside class="library-sidebar">
+    <div class="library-sidebar-header">カテゴリ</div>
+    <div id="catList" class="library-cat-list"></div>
+  </aside>
+
+  <!-- メインエリア -->
+  <div class="library-main">
+    <div class="library-main-header">
+      <span id="catTitle" class="main-title">カテゴリを選択してください</span>
+      <input id="libSearch" class="library-search" placeholder="名前・タグで検索…" oninput="filterItems(this.value)" style="display:none">
+      <button id="refreshBtn" class="btn btn-secondary btn-sm" onclick="loadItems()" style="display:none">更新</button>
+    </div>
+    <div class="library-body">
+      <div id="catHelp" class="lib-cat-help" style="display:none"></div>
+      <div id="itemsArea"></div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/library.js"></script>
+</body>
+</html>

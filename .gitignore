@@ -25,6 +25,14 @@ Thumbs.db
 # Logs
 logs/
 *.log
+error.log
+
+# Windows artifacts
+tools/Desktop
+tools/Pin
+
+# Workspace state
+tools/.workspace.json
 
 # TypeScript
 *.tsbuildinfo

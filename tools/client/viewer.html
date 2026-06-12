@@ -14,6 +14,8 @@
     <a href="/editor"       class="nav-link">Editor</a>
     <a href="/viewer"       class="nav-link active">Viewer</a>
     <a href="/traceability" class="nav-link">Traceability</a>
+    <a href="/library"      class="nav-link">Library</a>
+    <a href="/requests"     class="nav-link">Requests</a>
   </div>
   <div class="nav-workspace">
     <button id="editBtn" class="btn btn-sm btn-secondary" style="display:none" onclick="openEditor()">編集</button>
@@ -45,6 +47,8 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose' });</script>
 <script src="/js/api.js"></script>
 <script src="/js/utils.js"></script>
 <script src="/js/viewer.js"></script>

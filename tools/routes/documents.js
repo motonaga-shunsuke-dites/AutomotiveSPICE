@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { listDocs, readDoc, writeDoc, deleteDoc } = require('../services/fileService');
+const { listDocs, readDoc, writeDoc, deleteDoc, renumberProcess } = require('../services/fileService');
 
 router.get('/', (req, res) => {
   try {
@@ -48,8 +48,9 @@ router.put('/:id', (req, res) => {
 
 router.delete('/:id', (req, res) => {
   try {
-    const ok = deleteDoc(req.params.id);
-    if (!ok) return res.status(404).json({ error: 'Not found' });
+    const process = deleteDoc(req.params.id);
+    if (!process) return res.status(404).json({ error: 'Not found' });
+    renumberProcess(process);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });

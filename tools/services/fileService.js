@@ -77,9 +77,76 @@ function deleteDoc(id) {
   const wsPath = getWorkspacePath();
   for (const proc of ['SWE1', 'SWE2', 'SWE3', 'SWE4', 'SWE5', 'SWE6']) {
     const p = path.join(wsPath, proc, `${id}.json`);
-    if (fs.existsSync(p)) { fs.unlinkSync(p); return true; }
+    if (fs.existsSync(p)) { fs.unlinkSync(p); return proc; }
   }
-  return false;
+  return null;
 }
 
-module.exports = { getWorkspace, setWorkspace, listDocs, readDoc, writeDoc, deleteDoc };
+function renumberProcess(process) {
+  const wsPath = getWorkspacePath();
+  const dir = path.join(wsPath, process);
+  if (!fs.existsSync(dir)) return;
+
+  // Group docs by ID prefix (e.g. SRS, UTR)
+  const byPrefix = {};
+  for (const file of fs.readdirSync(dir)) {
+    if (!file.endsWith('.json')) continue;
+    try {
+      const doc = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf-8'));
+      const prefix = doc.id.replace(/_\d+$/, '');
+      if (!byPrefix[prefix]) byPrefix[prefix] = [];
+      byPrefix[prefix].push(doc);
+    } catch { /* skip corrupt */ }
+  }
+
+  // Build old→new ID map per prefix
+  const idMap = {};
+  for (const [prefix, docs] of Object.entries(byPrefix)) {
+    docs.sort((a, b) => {
+      const nA = parseInt((a.id.match(/_(\d+)$/) || [, 0])[1]);
+      const nB = parseInt((b.id.match(/_(\d+)$/) || [, 0])[1]);
+      return nA - nB;
+    });
+    docs.forEach((doc, i) => {
+      const newId = `${prefix}_${String(i + 1).padStart(3, '0')}`;
+      if (doc.id !== newId) idMap[doc.id] = newId;
+    });
+  }
+
+  if (Object.keys(idMap).length === 0) return;
+
+  // Delete all files in this process dir, then rewrite with new IDs
+  for (const file of fs.readdirSync(dir)) {
+    if (file.endsWith('.json')) fs.unlinkSync(path.join(dir, file));
+  }
+  for (const docs of Object.values(byPrefix)) {
+    for (const doc of docs) {
+      doc.id = idMap[doc.id] || doc.id;
+      fs.writeFileSync(path.join(dir, `${doc.id}.json`), JSON.stringify(doc, null, 2), 'utf-8');
+    }
+  }
+
+  // Update cross-references in all other processes
+  for (const proc of ['SWE1', 'SWE2', 'SWE3', 'SWE4', 'SWE5', 'SWE6']) {
+    if (proc === process) continue;
+    const procDir = path.join(wsPath, proc);
+    if (!fs.existsSync(procDir)) continue;
+    for (const file of fs.readdirSync(procDir)) {
+      if (!file.endsWith('.json')) continue;
+      const fp = path.join(procDir, file);
+      try {
+        const doc = JSON.parse(fs.readFileSync(fp, 'utf-8'));
+        let changed = false;
+        const remap = arr => {
+          if (!Array.isArray(arr)) return arr;
+          return arr.map(id => { const n = idMap[id]; if (n) { changed = true; return n; } return id; });
+        };
+        doc.upstream   = remap(doc.upstream);
+        doc.downstream = remap(doc.downstream);
+        if (changed) fs.writeFileSync(fp, JSON.stringify(doc, null, 2), 'utf-8');
+      } catch { /* skip */ }
+    }
+  }
+}
+
+module.exports = { getWorkspace, setWorkspace, getWorkspacePath, listDocs, readDoc, writeDoc, deleteDoc, renumberProcess };

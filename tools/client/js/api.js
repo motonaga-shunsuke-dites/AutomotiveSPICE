@@ -26,7 +26,12 @@ const API = (() => {
     createDocument:    (doc)    => req('POST',   '/documents', doc),
     updateDocument:    (id, d)  => req('PUT',    `/documents/${id}`, d),
     deleteDocument:    (id)     => req('DELETE', `/documents/${id}`),
-    getTraceability:   ()       => req('GET',    '/traceability'),
-    getImpact:         (id)     => req('GET',    `/traceability/impact/${id}`),
+    getTraceability:        ()            => req('GET',    '/traceability'),
+    getImpact:              (id)          => req('GET',    `/traceability/impact/${id}`),
+    getLibraryCategories:   ()            => req('GET',    '/library/categories'),
+    getLibraryItems:        (cat)         => req('GET',    `/library/${cat}`),
+    addLibraryItem:         (cat, item)   => req('POST',   `/library/${cat}`, item),
+    updateLibraryItem:      (cat, id, d)  => req('PUT',    `/library/${cat}/${id}`, d),
+    deleteLibraryItem:      (cat, id)     => req('DELETE', `/library/${cat}/${id}`),
   };
 })();

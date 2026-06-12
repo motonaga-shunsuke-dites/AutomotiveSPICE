@@ -6,11 +6,11 @@
 <title>ASPICE Doc Tool — Traceability</title>
 <link rel="stylesheet" href="/css/styles.css">
 <style>
-  .impact-panel { position: fixed; right: 0; top: var(--nav-h); bottom: 0; width: 320px; background: var(--surface); border-left: 1px solid var(--orange); padding: 16px; transform: translateX(100%); transition: transform 0.25s; overflow-y: auto; z-index: 50; }
+  .impact-panel { position: fixed; right: 0; top: var(--nav-h); bottom: 0; width: 320px; background: var(--surface); border-left: 2px solid var(--orange); padding: 16px; transform: translateX(100%); transition: transform 0.25s; overflow-y: auto; z-index: 50; box-shadow: -4px 0 16px rgba(0,0,0,0.08); }
   .impact-panel.open { transform: translateX(0); }
   .impact-panel h3 { color: var(--orange); margin-bottom: 12px; }
-  .impact-item { padding: 8px 10px; border-radius: 6px; background: var(--surface2); margin-bottom: 6px; cursor: pointer; font-size: 13px; }
-  .impact-item:hover { border-left: 3px solid var(--orange); }
+  .impact-item { padding: 8px 10px; border-radius: 6px; background: #fff7ed; border: 1px solid #fed7aa; margin-bottom: 6px; cursor: pointer; font-size: 13px; }
+  .impact-item:hover { background: #ffedd5; border-left: 3px solid var(--orange); }
 </style>
 </head>
 <body>
@@ -21,6 +21,8 @@
     <a href="/editor"       class="nav-link">Editor</a>
     <a href="/viewer"       class="nav-link">Viewer</a>
     <a href="/traceability" class="nav-link active">Traceability</a>
+    <a href="/library"      class="nav-link">Library</a>
+    <a href="/requests"     class="nav-link">Requests</a>
   </div>
   <div class="nav-workspace">
     <button class="btn btn-sm btn-secondary" onclick="loadMatrix()">更新</button>

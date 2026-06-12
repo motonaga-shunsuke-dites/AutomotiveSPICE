@@ -66,7 +66,8 @@ async function openDocument(id) {
     document.getElementById('editBtn').style.display = '';
 
     document.getElementById('viewerContent').innerHTML = renderDocView(doc, schema);
-    renderSidebar(allDocs); // refresh active state
+    renderSidebar(allDocs);
+    renderViewerDiagrams();
   } catch (e) { Utils.toast('読み込みエラー: ' + e.message, 'error'); }
 }
 
@@ -87,7 +88,12 @@ function renderDocView(doc, schema) {
       html += '<table class="viewer-table"><tbody>';
       for (const f of sec.fields) {
         const v = doc.content[f.id] || '';
-        html += `<tr><th style="width:160px">${Utils.escapeHtml(f.label)}</th><td>${Utils.escapeHtml(v)}</td></tr>`;
+        if (f.type === 'diagram') {
+          const b64 = v ? btoa(unescape(encodeURIComponent(v))) : '';
+          html += `<tr><th style="width:160px;vertical-align:top">${Utils.escapeHtml(f.label)}</th><td><div class="diagram-view" data-b64="${b64}"></div></td></tr>`;
+        } else {
+          html += `<tr><th style="width:160px">${Utils.escapeHtml(f.label)}</th><td>${Utils.escapeHtml(v)}</td></tr>`;
+        }
       }
       html += '</tbody></table>';
     }
@@ -106,6 +112,23 @@ function renderDocView(doc, schema) {
     html += '</tbody></table>';
   }
   return html;
+}
+
+async function renderViewerDiagrams() {
+  const nodes = document.querySelectorAll('.diagram-view');
+  for (const el of nodes) {
+    const b64 = el.dataset.b64;
+    const code = b64 ? decodeURIComponent(escape(atob(b64))) : '';
+    if (!code?.trim()) { el.innerHTML = '<span style="color:var(--text-dim);font-size:12px">（ダイアグラムなし）</span>'; continue; }
+    try {
+      const id = 'vdiagram_' + Math.random().toString(36).slice(2);
+      const { svg } = await mermaid.render(id, code);
+      el.innerHTML = svg;
+      el.onclick = () => Utils.openDiagramModal(svg);
+    } catch (e) {
+      el.innerHTML = `<span style="color:var(--red);font-size:12px">構文エラー: ${Utils.escapeHtml(e.message || String(e))}</span>`;
+    }
+  }
 }
 
 function openEditor() {
