@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ASPICE Doc Tool — AI 活用方針</title>
+<link rel="stylesheet" href="/css/styles.css">
+<style>
+/* ─── レイアウト ─── */
+.ap-layout { display:flex; flex:1; overflow:hidden; }
+
+.ap-sidebar {
+  width:220px; flex-shrink:0;
+  border-right:1px solid var(--border);
+  background:var(--surface2);
+  display:flex; flex-direction:column;
+  overflow:hidden;
+}
+.ap-sidebar-title {
+  font-size:11px; font-weight:700; color:var(--text-dim);
+  padding:12px 14px 8px; text-transform:uppercase; letter-spacing:.5px;
+}
+.ap-file-list { flex:1; overflow-y:auto; padding:4px 0; }
+.ap-file-item {
+  display:flex; align-items:center; gap:6px;
+  padding:6px 14px; cursor:pointer;
+  font-size:12px; color:var(--text-main);
+  border-left:3px solid transparent;
+  transition:background .1s;
+}
+.ap-file-item:hover { background:var(--surface); }
+.ap-file-item.active {
+  background:var(--surface); color:var(--accent);
+  border-left-color:var(--accent); font-weight:600;
+}
+.ap-file-icon { font-size:13px; flex-shrink:0; }
+
+.ap-main {
+  flex:1; display:flex; flex-direction:column; overflow:hidden;
+}
+
+/* ─── ツールバー ─── */
+.ap-toolbar {
+  display:flex; align-items:center; gap:8px;
+  padding:10px 20px; border-bottom:1px solid var(--border);
+  background:var(--surface);
+  flex-shrink:0;
+}
+.ap-filename {
+  font-size:13px; font-weight:600; color:var(--text-main);
+  flex:1;
+}
+.ap-mode-btn {
+  padding:5px 14px; border-radius:5px;
+  font-size:12px; font-weight:600; cursor:pointer;
+  border:1px solid var(--border);
+  background:var(--surface2); color:var(--text-dim);
+  transition:background .15s;
+}
+.ap-mode-btn:hover { background:var(--border); }
+.ap-mode-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+.ap-save-btn {
+  padding:5px 16px; border-radius:5px;
+  font-size:12px; font-weight:600; cursor:pointer;
+  border:none; background:var(--green); color:#fff;
+  display:none;
+}
+.ap-save-btn:hover { opacity:.9; }
+.ap-saved-badge {
+  font-size:11px; color:var(--green); font-weight:600;
+  opacity:0; transition:opacity .4s;
+}
+
+/* ─── コンテンツ ─── */
+.ap-content { flex:1; overflow:auto; padding:28px 40px; }
+
+/* ─── 編集テキストエリア ─── */
+.ap-editor {
+  display:none; flex:1;
+  font-family:'Consolas','Courier New',monospace;
+  font-size:13px; line-height:1.7;
+  padding:20px 24px;
+  border:none; outline:none; resize:none;
+  background:var(--surface); color:var(--text-main);
+  width:100%; box-sizing:border-box;
+}
+
+/* ─── Markdown レンダリング ─── */
+.md-body { max-width:860px; font-size:13px; line-height:1.8; color:var(--text-main); }
+.md-body h1 { font-size:20px; font-weight:700; margin:0 0 16px; padding-bottom:8px; border-bottom:2px solid var(--accent); color:var(--accent); }
+.md-body h2 { font-size:15px; font-weight:700; margin:28px 0 10px; padding-bottom:6px; border-bottom:1px solid var(--border); color:var(--text-main); }
+.md-body h3 { font-size:13px; font-weight:700; margin:18px 0 8px; color:var(--text-main); }
+.md-body p  { margin:0 0 10px; }
+.md-body ul, .md-body ol { margin:6px 0 10px 20px; }
+.md-body li { margin:3px 0; }
+.md-body code {
+  font-family:'Consolas','Courier New',monospace;
+  font-size:12px; background:var(--surface2);
+  border:1px solid var(--border); border-radius:3px;
+  padding:1px 5px;
+}
+.md-body pre {
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:6px; padding:14px 16px; overflow-x:auto;
+  margin:10px 0 14px;
+}
+.md-body pre code { background:none; border:none; padding:0; font-size:12px; line-height:1.6; }
+.md-body table { border-collapse:collapse; margin:10px 0 14px; font-size:12px; width:100%; }
+.md-body th { background:var(--accent); color:#fff; padding:7px 12px; text-align:left; border:1px solid #1d4ed8; }
+.md-body td { padding:6px 12px; border:1px solid var(--border); vertical-align:top; }
+.md-body tr:nth-child(even) td { background:#fafafa; }
+.md-body hr { border:none; border-top:1px solid var(--border); margin:20px 0; }
+.md-body blockquote { border-left:3px solid var(--accent); margin:8px 0; padding:4px 14px; color:var(--text-dim); background:var(--surface2); border-radius:0 4px 4px 0; }
+.md-body strong { font-weight:700; }
+.md-body em { font-style:italic; }
+.md-body a { color:var(--accent); text-decoration:underline; }
+
+/* 空状態 */
+.ap-empty {
+  display:flex; align-items:center; justify-content:center;
+  flex:1; color:var(--text-dim); font-size:13px;
+}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <span class="navbar-brand">📋 ASPICE Doc Tool</span>
+  <div class="nav-links">
+    <a href="/"             class="nav-link">Portal</a>
+    <a href="/overview"     class="nav-link">概要</a>
+    <a href="/ai-policy"    class="nav-link active">AI方針</a>
+    <a href="/editor"       class="nav-link">Editor</a>
+    <a href="/viewer"       class="nav-link">Viewer</a>
+    <a href="/traceability" class="nav-link">Traceability</a>
+    <a href="/library"      class="nav-link">Library</a>
+    <a href="/requests"     class="nav-link">Requests</a>
+  </div>
+  <div class="nav-workspace"><span id="wsLabel">ワークスペース未設定</span></div>
+</nav>
+
+<div class="main ap-layout">
+
+  <!-- 左：ファイル一覧 -->
+  <div class="ap-sidebar">
+    <div class="ap-sidebar-title">AI-prompts/</div>
+    <div class="ap-file-list" id="fileList"></div>
+  </div>
+
+  <!-- 右：コンテンツ -->
+  <div class="ap-main">
+    <div class="ap-toolbar" id="toolbar" style="display:none">
+      <span class="ap-filename" id="apFilename"></span>
+      <button class="ap-mode-btn active" id="btnView"  onclick="setMode('view')">表示</button>
+      <button class="ap-mode-btn"        id="btnEdit"  onclick="setMode('edit')">編集</button>
+      <button class="ap-save-btn"        id="btnSave"  onclick="saveFile()">保存</button>
+      <span class="ap-saved-badge" id="savedBadge">保存しました ✓</span>
+    </div>
+
+    <div class="ap-content" id="apContent">
+      <div class="ap-empty">← ファイルを選択してください</div>
+    </div>
+    <textarea class="ap-editor" id="apEditor" spellcheck="false"
+      oninput="onEditorInput()"></textarea>
+  </div>
+
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+// ── ワークスペース表示 ─────────────────────────────────────────────────────
+(async () => {
+  try {
+    const ws = await API.getWorkspace();
+    document.getElementById('wsLabel').textContent =
+      ws.path.split(/[\\/]/).pop() + ' (' + ws.projectId + ')';
+  } catch {}
+})();
+
+// ── 状態 ───────────────────────────────────────────────────────────────────
+let currentFile  = null;
+let currentMode  = 'view';
+let originalText = '';
+let dirty        = false;
+
+// ── ファイル一覧ロード ─────────────────────────────────────────────────────
+const FILE_LABELS = {
+  'README.md':   '📋 概要・方針',
+  'tips.md':     '💡 Tips・失敗パターン',
+  'SWE1_SRS.md': 'SWE.1 SRS プロンプト',
+  'SWE2_SAD.md': 'SWE.2 SAD プロンプト',
+  'SWE3_SDD.md': 'SWE.3 SDD プロンプト',
+  'SWE4_UTS.md': 'SWE.4 UTS プロンプト',
+  'SWE5_ITS.md': 'SWE.5 ITS プロンプト',
+  'SWE6_QTS.md': 'SWE.6 QTS プロンプト',
+};
+
+const FILE_ORDER = ['README.md','tips.md','SWE1_SRS.md','SWE2_SAD.md','SWE3_SDD.md','SWE4_UTS.md','SWE5_ITS.md','SWE6_QTS.md'];
+
+async function loadFileList() {
+  const res  = await fetch('/api/ai-policy/files');
+  const data = await res.json();
+  const files = [...new Set([...FILE_ORDER, ...data.files])].filter(f => data.files.includes(f));
+
+  const list = document.getElementById('fileList');
+  list.innerHTML = files.map(f => `
+    <div class="ap-file-item" id="fi_${esc(f)}" onclick="openFile('${esc(f)}')">
+      <span class="ap-file-icon">📄</span>
+      <span>${esc(FILE_LABELS[f] || f)}</span>
+    </div>`).join('');
+
+  // デフォルトで README.md を開く
+  if (files.includes('README.md')) openFile('README.md');
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── ファイルを開く ──────────────────────────────────────────────────────────
+async function openFile(name) {
+  if (dirty && !confirm('変更が保存されていません。破棄しますか？')) return;
+
+  document.querySelectorAll('.ap-file-item').forEach(el => el.classList.remove('active'));
+  const fi = document.getElementById('fi_' + esc(name));
+  if (fi) fi.classList.add('active');
+
+  const res  = await fetch('/api/ai-policy/file?name=' + encodeURIComponent(name));
+  if (!res.ok) { alert('ファイルの読み込みに失敗しました'); return; }
+  const data = await res.json();
+
+  currentFile  = name;
+  originalText = data.content;
+  dirty        = false;
+
+  document.getElementById('apFilename').textContent = name;
+  document.getElementById('toolbar').style.display  = '';
+  document.getElementById('apEditor').value = data.content;
+
+  setMode('view');
+}
+
+// ── モード切替 ─────────────────────────────────────────────────────────────
+function setMode(mode) {
+  currentMode = mode;
+  const content = document.getElementById('apContent');
+  const editor  = document.getElementById('apEditor');
+  const btnView = document.getElementById('btnView');
+  const btnEdit = document.getElementById('btnEdit');
+  const btnSave = document.getElementById('btnSave');
+
+  if (mode === 'view') {
+    content.style.display = '';
+    editor.style.display  = 'none';
+    btnSave.style.display = 'none';
+    btnView.classList.add('active');
+    btnEdit.classList.remove('active');
+    content.innerHTML = '<div class="md-body">' + markdownToHtml(editor.value) + '</div>';
+  } else {
+    content.style.display = 'none';
+    editor.style.display  = 'block';
+    btnSave.style.display = '';
+    btnView.classList.remove('active');
+    btnEdit.classList.add('active');
+    editor.focus();
+  }
+}
+
+function onEditorInput() {
+  dirty = (document.getElementById('apEditor').value !== originalText);
+}
+
+// ── 保存 ───────────────────────────────────────────────────────────────────
+async function saveFile() {
+  if (!currentFile) return;
+  const content = document.getElementById('apEditor').value;
+  const res = await fetch('/api/ai-policy/file', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: currentFile, content }),
+  });
+  if (!res.ok) { alert('保存に失敗しました'); return; }
+  originalText = content;
+  dirty = false;
+  const badge = document.getElementById('savedBadge');
+  badge.style.opacity = '1';
+  setTimeout(() => badge.style.opacity = '0', 2000);
+  // 表示モードに戻す
+  setMode('view');
+}
+
+// ── 軽量 Markdown → HTML 変換 ────────────────────────────────────────────
+function markdownToHtml(md) {
+  if (!md) return '';
+  const lines = md.split('\n');
+  let html = '';
+  let inPre = false, inUl = false, inOl = false, inTable = false;
+
+  const inlineRender = s => s
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+    .replace(/~~([^~]+)~~/g, '<del>$1</del>');
+
+  const closeLists = () => {
+    if (inUl) { html += '</ul>'; inUl = false; }
+    if (inOl) { html += '</ol>'; inOl = false; }
+  };
+  const closeTable = () => {
+    if (inTable) { html += '</tbody></table>'; inTable = false; }
+  };
+
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // コードブロック
+    if (line.startsWith('```')) {
+      if (inPre) {
+        html += '</code></pre>';
+        inPre = false;
+      } else {
+        closeLists(); closeTable();
+        html += '<pre><code>';
+        inPre = true;
+      }
+      i++; continue;
+    }
+    if (inPre) {
+      html += (line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')) + '\n';
+      i++; continue;
+    }
+
+    // 水平線
+    if (/^---+$/.test(line.trim())) {
+      closeLists(); closeTable();
+      html += '<hr>'; i++; continue;
+    }
+
+    // 見出し
+    const hm = line.match(/^(#{1,4})\s+(.*)/);
+    if (hm) {
+      closeLists(); closeTable();
+      const level = hm[1].length;
+      html += `<h${level}>${inlineRender(hm[2])}</h${level}>`;
+      i++; continue;
+    }
+
+    // テーブル
+    if (line.startsWith('|')) {
+      const next = lines[i + 1] || '';
+      if (!inTable) {
+        // ヘッダ行
+        closeTable();
+        const headers = line.split('|').filter((_, j, a) => j > 0 && j < a.length - 1);
+        html += '<table><thead><tr>' +
+          headers.map(h => `<th>${inlineRender(h.trim())}</th>`).join('') +
+          '</tr></thead><tbody>';
+        inTable = true;
+        i++;
+        // 区切り行をスキップ
+        if (/^\|[\s|:-]+\|$/.test(lines[i] || '')) i++;
+        continue;
+      } else {
+        const cells = line.split('|').filter((_, j, a) => j > 0 && j < a.length - 1);
+        html += '<tr>' + cells.map(c => `<td>${inlineRender(c.trim())}</td>`).join('') + '</tr>';
+        i++; continue;
+      }
+    } else {
+      closeTable();
+    }
+
+    // リスト（箇条書き）
+    const ulm = line.match(/^(\s*)[-*]\s+(.*)/);
+    if (ulm) {
+      if (!inUl) { if (inOl) { html += '</ol>'; inOl = false; } html += '<ul>'; inUl = true; }
+      html += `<li>${inlineRender(ulm[2])}</li>`;
+      i++; continue;
+    }
+    // リスト（番号付き）
+    const olm = line.match(/^(\s*)\d+\.\s+(.*)/);
+    if (olm) {
+      if (!inOl) { if (inUl) { html += '</ul>'; inUl = false; } html += '<ol>'; inOl = true; }
+      html += `<li>${inlineRender(olm[2])}</li>`;
+      i++; continue;
+    }
+
+    // 引用
+    const bqm = line.match(/^>\s*(.*)/);
+    if (bqm) {
+      closeLists();
+      html += `<blockquote>${inlineRender(bqm[1])}</blockquote>`;
+      i++; continue;
+    }
+
+    // 空行
+    if (line.trim() === '') {
+      closeLists();
+      html += '';
+      i++; continue;
+    }
+
+    // 通常テキスト
+    closeLists();
+    html += `<p>${inlineRender(line)}</p>`;
+    i++;
+  }
+
+  if (inPre) html += '</code></pre>';
+  closeLists();
+  closeTable();
+  return html;
+}
+
+// ページ離脱時の警告
+window.addEventListener('beforeunload', e => {
+  if (dirty) { e.preventDefault(); e.returnValue = ''; }
+});
+
+loadFileList();
+</script>
+</body>
+</html>

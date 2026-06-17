@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ASPICE Doc Tool — プロセス概要</title>
+<link rel="stylesheet" href="/css/styles.css">
+<style>
+.ov-body { flex:1; overflow-y:auto; padding:20px 32px; }
+
+.ov-h2 {
+  font-size:15px; font-weight:700; margin:28px 0 10px;
+  padding-bottom:6px; border-bottom:2px solid var(--accent);
+  color:var(--accent);
+}
+.ov-note { font-size:12px; color:var(--text-dim); margin-bottom:10px; line-height:1.7; }
+
+/* V字モデル */
+.vmodel {
+  font-family:'Consolas',monospace; font-size:12px; line-height:2;
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:8px; padding:16px 20px; white-space:pre;
+  display:inline-block;
+}
+
+/* ─── 成果物テーブル ─── */
+.ov-table {
+  width:100%; border-collapse:collapse; font-size:12px;
+  table-layout:fixed;
+}
+.ov-table colgroup col:nth-child(1) { width:52px; }
+.ov-table colgroup col:nth-child(2) { width:52px; }
+.ov-table colgroup col:nth-child(3) { width:180px; }
+.ov-table colgroup col:nth-child(4) { /* 構成要素: 残り */ }
+.ov-table colgroup col:nth-child(5) { width:70px; }
+.ov-table colgroup col:nth-child(6) { width:220px; }
+.ov-table colgroup col:nth-child(7) { width:230px; }
+.ov-table colgroup col:nth-child(8) { width:104px; }
+
+.ov-table th {
+  background:var(--accent); color:#fff;
+  padding:8px 10px; text-align:left;
+  border:1px solid #1d4ed8; font-weight:600;
+  white-space:nowrap; position:sticky; top:0; z-index:2;
+}
+.ov-table td {
+  padding:5px 10px; border:1px solid var(--border);
+  vertical-align:middle; line-height:1.5;
+}
+.ov-table tbody tr:nth-child(odd) td { background:#fafafa; }
+.ov-table tbody tr:hover td { background:#eff6ff !important; }
+
+/* 工程列 */
+.col-swe {
+  font-weight:700; font-size:11px; text-align:center;
+  white-space:nowrap; vertical-align:middle !important;
+}
+.col-swe.swe1 { background:#fef9c3 !important; color:#854d0e; }
+.col-swe.swe2 { background:#dcfce7 !important; color:#166534; }
+.col-swe.swe3 { background:#dbeafe !important; color:#1e40af; }
+.col-swe.swe4 { background:#fce7f3 !important; color:#9d174d; }
+.col-swe.swe5 { background:#ede9fe !important; color:#5b21b6; }
+.col-swe.swe6 { background:#fff7ed !important; color:#9a3412; }
+
+/* 略称・ドキュメント名（SDD セル） */
+.col-abbr { font-weight:600; vertical-align:middle !important; }
+.col-doc  { font-weight:500; vertical-align:middle !important; }
+
+/* 構成要素 */
+.col-elem.sub { padding-left:22px; color:var(--text-dim); }
+
+/* 必須/推奨 */
+.col-req { text-align:center; white-space:nowrap; font-weight:600; }
+.col-req.must { color:var(--green); }
+.col-req.rec  { color:var(--yellow); }
+
+/* 適用条件 */
+.col-cond { font-size:11px; color:var(--text-dim); }
+
+/* ファイル命名 */
+.col-file { font-family:'Consolas',monospace; font-size:11px; }
+.col-file code {
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:3px; padding:1px 4px; font-size:11px;
+  white-space:nowrap;
+}
+
+/* SDD 先頭行の区切り */
+.sdd-top td { border-top:2px solid var(--accent); }
+
+/* ─── AI 方針サマリ ─── */
+.ai-banner {
+  display:flex; align-items:stretch; gap:0;
+  border:1px solid var(--border); border-radius:8px;
+  overflow:hidden; margin-bottom:24px;
+  font-size:12px;
+}
+.ai-banner-label {
+  background:var(--accent); color:#fff;
+  writing-mode:vertical-rl; text-orientation:mixed;
+  padding:16px 10px; font-weight:700; font-size:11px;
+  letter-spacing:.5px; flex-shrink:0; text-align:center;
+}
+.ai-banner-body { flex:1; padding:14px 18px; background:var(--surface2); }
+.ai-banner-rule {
+  font-weight:700; font-size:13px; color:var(--text-main);
+  margin:0 0 10px;
+}
+.ai-banner-table { border-collapse:collapse; width:100%; }
+.ai-banner-table th {
+  text-align:left; padding:4px 10px;
+  font-size:11px; color:var(--text-dim); font-weight:600;
+  border-bottom:1px solid var(--border); background:none;
+}
+.ai-banner-table td { padding:4px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
+.ai-banner-table tr:last-child td { border-bottom:none; }
+.ai-tag {
+  display:inline-block; border-radius:4px; padding:1px 7px;
+  font-size:11px; font-weight:700; white-space:nowrap;
+}
+.ai-tag.human { background:#dcfce7; color:#166534; }
+.ai-tag.ai    { background:#dbeafe; color:#1e40af; }
+.ai-banner-link {
+  display:inline-flex; align-items:center; gap:4px;
+  margin-top:10px; color:var(--accent);
+  font-size:12px; font-weight:600; text-decoration:none;
+}
+.ai-banner-link:hover { text-decoration:underline; }
+
+/* ─── 要素 ID テーブル ─── */
+.id-table { border-collapse:collapse; font-size:13px; margin-top:8px; }
+.id-table th {
+  background:var(--surface2); padding:7px 14px;
+  border:1px solid var(--border); font-weight:600; color:var(--text-dim);
+}
+.id-table td { padding:7px 14px; border:1px solid var(--border); }
+.id-table code {
+  background:var(--surface2); padding:1px 5px;
+  border-radius:3px; font-size:12px;
+}
+.id-table tr:nth-child(even) td { background:#f9fafb; }
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <span class="navbar-brand">📋 ASPICE Doc Tool</span>
+  <div class="nav-links">
+    <a href="/"             class="nav-link">Portal</a>
+    <a href="/overview"     class="nav-link active">概要</a>
+    <a href="/ai-policy"    class="nav-link">AI方針</a>
+    <a href="/editor"       class="nav-link">Editor</a>
+    <a href="/viewer"       class="nav-link">Viewer</a>
+    <a href="/traceability" class="nav-link">Traceability</a>
+    <a href="/library"      class="nav-link">Library</a>
+    <a href="/requests"     class="nav-link">Requests</a>
+  </div>
+  <div class="nav-workspace">
+    <span id="wsLabel">ワークスペース未設定</span>
+  </div>
+</nav>
+
+<div class="main ov-body">
+
+  <!-- ⓪ AI 活用方針サマリ -->
+  <div class="ai-banner">
+    <div class="ai-banner-label">AI 活用方針</div>
+    <div class="ai-banner-body">
+      <p class="ai-banner-rule">「人間が構造を定義し、AI が詳細を記述する」</p>
+      <table class="ai-banner-table">
+        <thead>
+          <tr><th>工程</th><th>主担当</th><th>理由</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>SWE.1</strong> 要件分析（SRS）</td>
+            <td><span class="ai-tag ai">AI 主導</span></td>
+            <td>上位要件 → SW要件の変換は局所的作業</td>
+          </tr>
+          <tr>
+            <td><strong>SWE.2</strong> アーキテクチャ設計（SAD）</td>
+            <td><span class="ai-tag human">人間 主導</span></td>
+            <td>コンポーネント境界の決定は全体設計。人間がスケッチ → AI が清書</td>
+          </tr>
+          <tr>
+            <td><strong>SWE.3</strong> 詳細設計（SDD）</td>
+            <td><span class="ai-tag ai">AI 主導</span></td>
+            <td>1 ARC-ID = 1 SDD。局所設計のため AI 向き。SAD がガードレール</td>
+          </tr>
+          <tr>
+            <td><strong>SWE.4〜6</strong> テスト仕様</td>
+            <td><span class="ai-tag ai">AI 主導</span></td>
+            <td>仕様 → テストケース生成は規則的作業</td>
+          </tr>
+        </tbody>
+      </table>
+      <a class="ai-banner-link" href="/ai-policy">→ プロンプト集・詳細方針を見る／編集する</a>
+    </div>
+  </div>
+
+  <!-- ① V字モデル -->
+  <div class="ov-h2">プロセス全体像（V 字モデル）</div>
+  <div class="vmodel">SWE.1 要件分析 ──────────────────────────────── SWE.6 適格性確認テスト
+  │  SRS → 要件を確立                                  ↑ SWR 全件の充足確認
+  ↓                                                    │
+SWE.2 アーキテクチャ設計 ──────────────── SWE.5 統合テスト
+  │  SAD → コンポーネントに分割                        ↑ コンポーネント間 IF 検証
+  ↓                                                    │
+SWE.3 詳細設計・実装 ──────────────── SWE.4 ユニット検証
+         SDD + ソースコード                    ↑ ユニット単位の設計適合確認</div>
+
+  <!-- ② 成果物一覧 -->
+  <div class="ov-h2" style="margin-top:32px">成果物一覧</div>
+  <p class="ov-note">
+    &lt;PID&gt; = プロジェクト ID（例: PRJ001）<br>
+    SDD 内の図はすべて <strong>PlantUML</strong> 記法で記述。粒度ポリシー（L1 概念 / L2 仕様 / L3 実装）は SDD 作成前に宣言する。ASPICE SWE.3 最低要件 = <strong>L2</strong>。
+  </p>
+
+  <table class="ov-table">
+    <colgroup>
+      <col><col><col><col><col><col><col><col>
+    </colgroup>
+    <thead>
+      <tr>
+        <th>工程</th>
+        <th>略称</th>
+        <th>ドキュメント名</th>
+        <th>構成要素 / 図</th>
+        <th>必須/推奨</th>
+        <th>適用条件</th>
+        <th>ファイル命名規則</th>
+        <th>詳細ルール</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <!-- ─ SWE.1 ─ -->
+      <tr>
+        <td class="col-swe swe1" rowspan="3">SWE.1</td>
+        <td class="col-abbr">SRS</td>
+        <td class="col-doc">ソフトウェア要件仕様書</td>
+        <td class="col-elem">機能要件 (SWR-xxx)・非機能要件・インターフェース要件</td>
+        <td class="col-req">—</td>
+        <td class="col-cond">—</td>
+        <td class="col-file"><code>SRS_&lt;PID&gt;_&lt;連番&gt;_v&lt;X.Y&gt;.md</code></td>
+        <td>SWE1/ルール.md</td>
+      </tr>
+      <tr>
+        <td class="col-abbr">IRS</td>
+        <td class="col-doc">インターフェース要件定義書</td>
+        <td class="col-elem">外部システム・HW との接続仕様</td>
+        <td class="col-req">—</td>
+        <td class="col-cond">—</td>
+        <td class="col-file"><code>IRS_&lt;PID&gt;_&lt;連番&gt;_v&lt;X.Y&gt;.md</code></td>
+        <td>SWE1/ルール.md</td>
+      </tr>
+      <tr>
+        <td class="col-abbr">TM</td>
+        <td class="col-doc">トレーサビリティマトリクス</td>
+        <td class="col-elem">SYS → SWR 対応表</td>
+        <td class="col-req">—</td>
+        <td class="col-cond">—</td>
+        <td class="col-file">—</td>
+        <td>SWE1/ルール.md</td>
+      </tr>
+
+      <!-- ─ SWE.2 ─ -->
+      <tr>
+        <td class="col-swe swe2" rowspan="3">SWE.2</td>
+        <td class="col-abbr">SAD</td>
+        <td class="col-doc">ソフトウェアアーキテクチャ設計書</td>
+        <td class="col-elem">ARC-xxx・IF 設計・動的ふるまい・ADR・画面遷移図（概要）・概念 ER 図</td>
+        <td class="col-req">—</td>
+        <td class="col-cond">—</td>
+        <td class="col-file"><code>SAD_&lt;PID&gt;_&lt;連番&gt;_v&lt;X.Y&gt;.md</code></td>
+        <td>SWE2/ルール.md</td>
+      </tr>
+      <tr>
+        <td class="col-abbr">IFD</td>
+        <td class="col-doc">インターフェース設計書</td>
+        <td class="col-elem">コンポーネント間 API・データ形式 (IFC-xxx)</td>
+        <td class="col-req">—</td>
+        <td class="col-cond">—</td>
+        <td class="col-file"><code>IFD_&lt;PID&gt;_&lt;連番&gt;_v&lt;X.Y&gt;.md</code></td>
+        <td>SWE2/ルール.md</td>
+      </tr>
+      <tr>
+        <td class="col-abbr">TM</td>
+        <td class="col-doc">トレーサビリティマトリクス</td>
+        <td class="col-elem">SWR → ARC 対応表</td>
+        <td class="col-req">—</td>
+        <td class="col-cond">—</td>
+        <td class="col-file">—</td>
+        <td>SWE2/ルール.md</td>
+      </tr>
+
+      <!-- ─ SWE.3 ─ -->
+      <!-- SDD: 11 行（概要 + 図 10 種）+ COD + ソース + TM = 14 行 -->
+      <tr class="sdd-top">
+        <td class="col-swe swe3" rowspan="14">SWE.3</td>
+        <td class="col-abbr" rowspan="11"><strong>SDD</strong></td>
+        <td class="col-doc" rowspan="11"><strong>ソフトウェア詳細設計書</strong></td>
+        <td class="col-elem">ユニット設計 (UNT-xxx)・API 仕様・エラー処理設計</td>
+        <td class="col-req must">必須</td>
+        <td class="col-cond">常に</td>
+        <td class="col-file" rowspan="11"><code>SDD_&lt;PID&gt;_&lt;連番&gt;_v&lt;X.Y&gt;.md</code></td>
+        <td rowspan="11">SWE3/ルール.md</td>
+      </tr>
+      <tr>
+        <td class="col-elem sub">└ モジュール構造図</td>
+        <td class="col-req must">必須</td>
+        <td class="col-cond">常に</td>
+      </tr>
+      <tr>
+        <td class="col-elem sub">└ クラス図</td>
+        <td class="col-req must">必須</td>
+        <td class="col-cond">OOP 言語を使う場合</td>
+      </tr>
+      <tr>
+        <td class="col-elem sub">└ データ構造図</td>
+        <td class="col-req must">必須</td>
+        <td class="col-cond">C 言語で struct を使う場合</td>
+      </tr>
+      <tr>
+        <td class="col-elem sub">└ シーケンス図（正常系）</td>
+        <td class="col-req must">必須</td>
+        <td class="col-cond">ユニット間メッセージが発生する機能</td>
+      </tr>
+      <tr>
+        <td class="col-elem sub">└ シーケンス図（異常系）</td>
+        <td class="col-req must">必須</td>
+        <td class="col-cond">エラー・タイムアウト等の異常フロー</td>
+      </tr>
+      <tr>
+        <td class="col-elem sub">└ 状態遷移図</td>
+        <td class="col-req must">必須</td>
+        <td class="col-cond">状態を持つユニットが存在する場合</td>
+      </tr>
+      <tr>
+        <td class="col-elem sub">└ フローチャート</td>
+        <td class="col-req must">必須</td>
+        <td class="col-cond">循環的複雑度 &gt; 5 の関数</td>
+      </tr>
+      <tr>
+        <td class="col-elem sub">└ ER 図</td>
+        <td class="col-req must">必須</td>
+        <td class="col-cond">DB・永続化データ構造がある場合</td>
+      </tr>
+      <tr>
+        <td class="col-elem sub">└ 画面設計（ワイヤーフレーム）</td>
+        <td class="col-req must">必須</td>
+        <td class="col-cond">UI が存在する場合</td>
+      </tr>
+      <tr>
+        <td class="col-elem sub">└ 画面遷移図</td>
+        <td class="col-req must">必須</td>
+        <td class="col-cond">UI が存在する場合</td>
+      </tr>
+      <tr>
+        <td class="col-abbr">COD</td>
+        <td class="col-doc">コーディング規約</td>
+        <td class="col-elem">命名規則・禁止事項・静的解析設定</td>
+        <td class="col-req">—</td>
+        <td class="col-cond">—</td>
+        <td class="col-file"><code>COD_&lt;PID&gt;_&lt;連番&gt;_v&lt;X.Y&gt;.md</code></td>
+        <td>SWE3/ルール.md</td>
+      </tr>
+      <tr>
+        <td class="col-abbr">—</td>
+        <td class="col-doc">ソースコード</td>
+        <td class="col-elem">各ユニットの実装（UNT-ID をコメントに記載）</td>
+        <td class="col-req">—</td>
+        <td class="col-cond">—</td>
+        <td class="col-file">—</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td class="col-abbr">TM</td>
+        <td class="col-doc">トレーサビリティマトリクス</td>
+        <td class="col-elem">ARC → UNT 対応表</td>
+        <td class="col-req">—</td>
+        <td class="col-cond">—</td>
+        <td class="col-file">—</td>
+        <td>SWE3/ルール.md</td>
+      </tr>
+
+      <!-- ─ SWE.4 ─ -->
+      <tr>
+        <td class="col-swe swe4" rowspan="2">SWE.4</td>
+        <td class="col-abbr">UTS</td>
+        <td class="col-doc">ユニットテスト仕様書</td>
+        <td class="col-elem">TC-UNT-xxx・カバレッジ目標・テスト環境</td>
+        <td class="col-req">—</td>
+        <td class="col-cond">—</td>
+        <td class="col-file"><code>UTS_&lt;PID&gt;_&lt;連番&gt;_v&lt;X.Y&gt;.md</code></td>
+        <td>SWE4/ルール.md</td>
+      </tr>
+      <tr>
+        <td class="col-abbr">UTR</td>
+        <td class="col-doc">ユニットテスト結果報告書</td>
+        <td class="col-elem">合否結果・実測カバレッジ・BUG-xxx</td>
+        <td class="col-req">—</td>
+        <td class="col-cond">—</td>
+        <td class="col-file"><code>UTR_&lt;PID&gt;_&lt;連番&gt;_v&lt;X.Y&gt;.md</code></td>
+        <td>SWE4/ルール.md</td>
+      </tr>
+
+      <!-- ─ SWE.5 ─ -->
+      <tr>
+        <td class="col-swe swe5" rowspan="3">SWE.5</td>
+        <td class="col-abbr">SIP</td>
+        <td class="col-doc">ソフトウェア統合計画書</td>
+        <td class="col-elem">統合戦略・統合順序 (INT-xx)・スタブ/ドライバ計画</td>
+        <td class="col-req">—</td>
+        <td class="col-cond">—</td>
+        <td class="col-file"><code>SIP_&lt;PID&gt;_&lt;連番&gt;_v&lt;X.Y&gt;.md</code></td>
+        <td>SWE5/ルール.md</td>
+      </tr>
+      <tr>
+        <td class="col-abbr">ITS</td>
+        <td class="col-doc">統合テスト仕様書</td>
+        <td class="col-elem">TC-INT-xxx・IF 検証・エラー伝搬・タイミング</td>
+        <td class="col-req">—</td>
+        <td class="col-cond">—</td>
+        <td class="col-file"><code>ITS_&lt;PID&gt;_&lt;連番&gt;_v&lt;X.Y&gt;.md</code></td>
+        <td>SWE5/ルール.md</td>
+      </tr>
+      <tr>
+        <td class="col-abbr">ITR</td>
+        <td class="col-doc">統合テスト結果報告書</td>
+        <td class="col-elem">合否結果・不具合一覧・回帰テスト結果</td>
+        <td class="col-req">—</td>
+        <td class="col-cond">—</td>
+        <td class="col-file"><code>ITR_&lt;PID&gt;_&lt;連番&gt;_v&lt;X.Y&gt;.md</code></td>
+        <td>SWE5/ルール.md</td>
+      </tr>
+
+      <!-- ─ SWE.6 ─ -->
+      <tr>
+        <td class="col-swe swe6" rowspan="2">SWE.6</td>
+        <td class="col-abbr">QTS</td>
+        <td class="col-doc">適格性確認テスト仕様書</td>
+        <td class="col-elem">TC-QAL-xxx・SWR カバレッジ計画・受入基準</td>
+        <td class="col-req">—</td>
+        <td class="col-cond">—</td>
+        <td class="col-file"><code>QTS_&lt;PID&gt;_&lt;連番&gt;_v&lt;X.Y&gt;.md</code></td>
+        <td>SWE6/ルール.md</td>
+      </tr>
+      <tr>
+        <td class="col-abbr">QTR</td>
+        <td class="col-doc">適格性確認テスト結果報告書</td>
+        <td class="col-elem">合否結果・SWR カバレッジ率・不具合一覧・リリース判定</td>
+        <td class="col-req">—</td>
+        <td class="col-cond">—</td>
+        <td class="col-file"><code>QTR_&lt;PID&gt;_&lt;連番&gt;_v&lt;X.Y&gt;.md</code></td>
+        <td>SWE6/ルール.md</td>
+      </tr>
+
+    </tbody>
+  </table>
+
+  <!-- ③ 要素 ID 体系 -->
+  <div class="ov-h2" style="margin-top:32px">要素 ID 体系</div>
+  <table class="id-table">
+    <thead>
+      <tr><th>要素</th><th>ID 形式</th><th>採番工程</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>ソフトウェア要件</td><td><code>SWR-&lt;3桁&gt;</code></td><td>SWE.1</td></tr>
+      <tr><td>アーキテクチャコンポーネント</td><td><code>ARC-&lt;3桁&gt;</code></td><td>SWE.2</td></tr>
+      <tr><td>インターフェース</td><td><code>IFC-&lt;3桁&gt;</code></td><td>SWE.2</td></tr>
+      <tr><td>設計ユニット</td><td><code>UNT-&lt;3桁&gt;</code></td><td>SWE.3</td></tr>
+      <tr><td>ユニットテストケース</td><td><code>TC-UNT-&lt;3桁&gt;</code></td><td>SWE.4</td></tr>
+      <tr><td>統合ステップ</td><td><code>INT-&lt;2桁&gt;</code></td><td>SWE.5</td></tr>
+      <tr><td>統合テストケース</td><td><code>TC-INT-&lt;3桁&gt;</code></td><td>SWE.5</td></tr>
+      <tr><td>適格性確認テストケース</td><td><code>TC-QAL-&lt;3桁&gt;</code></td><td>SWE.6</td></tr>
+      <tr><td>不具合</td><td><code>BUG-&lt;3桁&gt;</code></td><td>SWE.4〜6</td></tr>
+    </tbody>
+  </table>
+
+</div><!-- /ov-body -->
+
+<script src="/js/api.js"></script>
+<script>
+(async () => {
+  try {
+    const ws = await API.getWorkspace();
+    document.getElementById('wsLabel').textContent =
+      ws.path.split(/[\\/]/).pop() + ' (' + ws.projectId + ')';
+  } catch {}
+})();
+</script>
+</body>
+</html>

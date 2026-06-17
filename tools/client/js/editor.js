@@ -1,5 +1,6 @@
 let schemas = {};
 let allDocs = [];
+let allFolders = {};   // { SWE1: [{name,path,children},...], ... }
 let currentDoc = null;
 let currentSchema = null;
 const undo = new UndoManager();
@@ -62,10 +63,108 @@ function injectDataLists() {
 
 async function loadSidebar() {
   try {
-    const { documents } = await API.listDocuments();
-    allDocs = documents;
+    const [{ documents }, folders] = await Promise.all([
+      API.listDocuments(),
+      API.listFolders().catch(() => ({})),
+    ]);
+    allDocs    = documents;
+    allFolders = folders;
     renderSidebar(allDocs);
   } catch { renderSidebar([]); }
+}
+
+// ── サイドバー ツリー描画 ────────────────────────────────────────────────────
+
+/** フォルダツリーを { path → node } の平坦リストに展開（移動メニュー用） */
+function flattenFolderPaths(nodes, depth) {
+  const out = [];
+  for (const node of nodes) {
+    out.push({ name: node.name, path: node.path, depth });
+    out.push(...flattenFolderPaths(node.children, depth + 1));
+  }
+  return out;
+}
+
+/** ドキュメント1件の HTML（左余白は呼び出し側が style で指定） */
+function renderDocItem(d, paddingLeft) {
+  const isActive = currentDoc && currentDoc.id === d.id;
+  const pl = paddingLeft != null ? `style="padding-left:${paddingLeft}px"` : '';
+  return `<div class="doc-item${isActive ? ' active' : ''}" ${pl} onclick="openDocument('${d.id}')">
+    <span class="badge ${Utils.statusClass(d.status)}" style="font-size:10px">${Utils.statusLabel(d.status).slice(0,2)}</span>
+    <span class="doc-title">${Utils.escapeHtml(d.title || d.id)}</span>
+    <button class="doc-move-btn" title="フォルダへ移動"
+      onclick="event.stopPropagation();showMoveMenu(event,'${d.id}','${d.process}')">⋯</button>
+  </div>`;
+}
+
+/**
+ * docs をドキュメントタイプ別にグループ化して描画。
+ * typeKey 例: 'SWE3_SDD'  baseIndent はラベルの左余白(px)
+ */
+function renderByType(docs, proc, folder, baseIndent) {
+  if (!docs.length) return '';
+  const byType = {};
+  for (const d of docs) {
+    if (!byType[d.type]) byType[d.type] = [];
+    byType[d.type].push(d);
+  }
+  const esc = s => Utils.escapeHtml(String(s));
+  return Object.entries(byType).map(([type, tDocs]) => {
+    const schemaKey = `${proc}_${type}`;
+    const s = schemas[schemaKey];
+    const label = s ? esc(s.label) : type;
+    return `<div class="dtype-group">
+      <div class="dtype-header" style="padding-left:${baseIndent}px">
+        <span class="dtype-abbr">${esc(type)}</span>
+        <span class="dtype-label">${label}</span>
+        <button class="proc-new-btn" title="新規 ${esc(type)} 作成"
+          onclick="event.stopPropagation();createNewDocOfType('${esc(schemaKey)}','${esc(folder)}')">+</button>
+      </div>
+      ${tDocs.map(d => renderDocItem(d, baseIndent + 18)).join('')}
+    </div>`;
+  }).join('');
+}
+
+/**
+ * フォルダノードを再帰描画。
+ * node   : { name, path, children }
+ * byPath : { folderPath → docs[] }
+ * depth  : ネスト深さ（0 始まり）
+ */
+function renderFolderNode(node, byPath, proc, depth) {
+  const labelPad  = 10 + depth * 14;
+  const contentPad = labelPad + 18;
+
+  const directDocs = byPath[node.path] || [];
+  const totalDocs  = countDocsUnder(node, byPath);
+  const canDelete  = totalDocs === 0 && node.children.length === 0;
+  const esc = s => Utils.escapeHtml(String(s));
+
+  let inner = node.children.map(ch => renderFolderNode(ch, byPath, proc, depth + 1)).join('');
+  inner += renderByType(directDocs, proc, node.path, contentPad);
+
+  return `<div class="folder-node">
+    <div class="folder-label" onclick="toggleFolder(this)" style="padding-left:${labelPad}px">
+      <span class="folder-arrow">▾</span>
+      <span class="folder-icon">📁</span>
+      <span class="folder-name">${esc(node.name)}</span>
+      <span class="folder-count">${totalDocs}</span>
+      <button class="new-folder-btn" title="サブフォルダを作成"
+        onclick="event.stopPropagation();newFolder('${esc(proc)}','${esc(node.path)}')">📁</button>
+      <button class="proc-new-btn" title="このフォルダにドキュメントを作成"
+        onclick="event.stopPropagation();createDocInFolder('${esc(proc)}','${esc(node.path)}')">+</button>
+      <button class="folder-del-btn" title="フォルダを削除"
+        onclick="event.stopPropagation();deleteFolderByPath('${esc(proc)}','${esc(node.path)}')"
+        ${canDelete ? '' : 'style="display:none"'}>✕</button>
+    </div>
+    <div class="folder-docs">${inner}</div>
+  </div>`;
+}
+
+function countDocsUnder(node, byPath) {
+  let n = (byPath[node.path] || []).length;
+  for (const ch of node.children) n += countDocsUnder(ch, byPath);
+  return n;
 }
 
 function renderSidebar(docs) {
@@ -75,24 +174,37 @@ function renderSidebar(docs) {
     if (!byProc[d.process]) byProc[d.process] = [];
     byProc[d.process].push(d);
   }
+
   body.innerHTML = ['SWE1','SWE2','SWE3','SWE4','SWE5','SWE6'].map(proc => {
     const pd = byProc[proc] || [];
+
+    // folderPath → docs[]（直接の子のみ）
+    const byPath = {};
+    for (const d of pd) {
+      const f = d.folder || '';
+      if (!byPath[f]) byPath[f] = [];
+      byPath[f].push(d);
+    }
+
+    const folderTree = allFolders[proc] || [];
+
+    // フォルダノードを再帰描画
+    let inner = folderTree.map(node => renderFolderNode(node, byPath, proc, 0)).join('');
+    // ルート直下のドキュメントをタイプ別に表示
+    inner += renderByType(byPath[''] || [], proc, '', 10);
+
     return `<div class="process-group">
       <div class="process-label" onclick="toggleGroup(this)">
         <span class="process-label-left">
           <span class="arrow">▾</span> ${proc}
         </span>
+        <button class="new-folder-btn" title="${proc} にフォルダを作成"
+          onclick="event.stopPropagation();newFolder('${proc}','')">📁</button>
         <button class="proc-new-btn" title="${proc} の新規ドキュメント作成"
-          onclick="event.stopPropagation();openNewDocModalFor('${proc}')">+</button>
+          onclick="event.stopPropagation();createDocInFolder('${proc}','')">+</button>
         <span class="badge badge-draft" style="margin-left:4px">${pd.length}</span>
       </div>
-      <div class="process-docs">
-        ${pd.map(d => `
-          <div class="doc-item${currentDoc && currentDoc.id===d.id?' active':''}" onclick="openDocument('${d.id}')">
-            <span class="badge ${Utils.statusClass(d.status)}" style="font-size:10px">${Utils.statusLabel(d.status).slice(0,2)}</span>
-            <span class="doc-title">${Utils.escapeHtml(d.title || d.id)}</span>
-          </div>`).join('')}
-      </div>
+      <div class="process-docs">${inner}</div>
     </div>`;
   }).join('');
 }
@@ -107,6 +219,120 @@ function filterSidebar(q, procFilter) {
 function toggleGroup(el) {
   el.classList.toggle('collapsed');
   el.nextElementSibling.style.display = el.classList.contains('collapsed') ? 'none' : '';
+}
+
+function toggleFolder(el) {
+  el.classList.toggle('collapsed');
+  el.nextElementSibling.style.display = el.classList.contains('collapsed') ? 'none' : '';
+}
+
+// ── フォルダ操作 ──────────────────────────────────────────────────────────────
+
+/** フォルダを作成。parentPath が空ならルート直下、それ以外はサブフォルダ */
+async function newFolder(proc, parentPath) {
+  const name = prompt('フォルダ名を入力してください:');
+  if (!name || !name.trim()) return;
+  const folderPath = parentPath ? `${parentPath}/${name.trim()}` : name.trim();
+  try {
+    await API.createFolder(proc, folderPath);
+    const res = await API.listFolders(proc);
+    allFolders[proc] = res[proc] || [];
+    renderSidebar(allDocs);
+    Utils.toast(`フォルダ「${name.trim()}」を作成しました`, 'success');
+  } catch (e) {
+    Utils.toast('フォルダ作成エラー: ' + e.message, 'error');
+  }
+}
+
+/** フォルダを削除（空のときのみ）。folderPath は "/" 区切りの相対パス */
+async function deleteFolderByPath(proc, folderPath) {
+  const inside = allDocs.filter(d =>
+    d.process === proc && (d.folder === folderPath || d.folder.startsWith(folderPath + '/'))
+  );
+  if (inside.length > 0) {
+    Utils.toast('フォルダ内にドキュメントがあります。先に移動してください', 'error');
+    return;
+  }
+  const label = folderPath.split('/').pop();
+  if (!confirm(`フォルダ「${label}」を削除しますか？`)) return;
+  try {
+    await API.deleteFolder(proc, folderPath);
+    const res = await API.listFolders(proc);
+    allFolders[proc] = res[proc] || [];
+    renderSidebar(allDocs);
+    Utils.toast(`フォルダ「${label}」を削除しました`, 'success');
+  } catch (e) {
+    Utils.toast('フォルダ削除エラー: ' + e.message, 'error');
+  }
+}
+
+// ── ドキュメント作成（フォルダ指定対応） ─────────────────────────────────────
+
+let _pendingDocFolder = '';   // 作成先フォルダを openNewDocModalFor まで橋渡し
+
+/** proc の type モーダルを開き、作成後に folder へ配置する */
+function createDocInFolder(proc, folder) {
+  _pendingDocFolder = folder || '';
+  openNewDocModalFor(proc);
+}
+
+/** typeKey (例: 'SWE3_SDD') のドキュメントを folder に直接作成する */
+async function createNewDocOfType(typeKey, folder) {
+  _pendingDocFolder = folder || '';
+  await createNewDoc(typeKey);
+}
+
+// ── 移動メニュー ──────────────────────────────────────────────────────────────
+
+function showMoveMenu(event, docId, proc) {
+  document.querySelectorAll('.move-menu').forEach(m => m.remove());
+
+  const flat    = flattenFolderPaths(allFolders[proc] || [], 0);
+  const doc     = allDocs.find(d => d.id === docId);
+  const current = (doc && doc.folder) || '';
+  const esc     = s => Utils.escapeHtml(String(s));
+
+  const opts = flat.map(f =>
+    `<option value="${esc(f.path)}"${current === f.path ? ' selected' : ''}>${'　'.repeat(f.depth)}${esc(f.name)}</option>`
+  ).join('');
+
+  const menu = document.createElement('div');
+  menu.className = 'move-menu';
+  menu.innerHTML = `
+    <div class="move-menu-title">フォルダへ移動</div>
+    <select class="move-menu-select" id="moveSelect_${esc(docId)}">
+      <option value=""${current === '' ? ' selected' : ''}>（ルート・未整理）</option>
+      ${opts}
+    </select>
+    <button class="btn btn-primary btn-sm" style="width:100%;margin-top:6px"
+      onclick="doMoveDoc('${esc(docId)}')">移動</button>
+  `;
+
+  const btn = event.currentTarget;
+  btn.style.position = 'relative';
+  btn.appendChild(menu);
+
+  setTimeout(() => {
+    document.addEventListener('click', () =>
+      document.querySelectorAll('.move-menu').forEach(m => m.remove()),
+    { once: true });
+  }, 0);
+}
+
+async function doMoveDoc(docId) {
+  const sel = document.getElementById(`moveSelect_${docId}`);
+  if (!sel) return;
+  const folder = sel.value;
+  try {
+    await API.moveDocToFolder(docId, folder);
+    document.querySelectorAll('.move-menu').forEach(m => m.remove());
+    const doc = allDocs.find(d => d.id === docId);
+    if (doc) doc.folder = folder;
+    renderSidebar(allDocs);
+    Utils.toast('移動しました', 'success');
+  } catch (e) {
+    Utils.toast('移動エラー: ' + e.message, 'error');
+  }
 }
 
 async function openDocument(id) {
@@ -438,15 +664,17 @@ function closeNewDocModal() { document.getElementById('newDocModal').style.displ
 
 async function createNewDoc(typeKey) {
   closeNewDocModal();
+  const targetFolder = _pendingDocFolder;
+  _pendingDocFolder  = '';
   try {
     const s = schemas[typeKey];
     const { documents } = await API.listDocuments().catch(() => ({ documents: [] }));
     const existingIds = documents.filter(d => d.type === s.idPrefix).map(d => d.id);
     const id = Utils.generateId(s.idPrefix, existingIds);
-    // サーバーに即時保存してからエディターで開く
     const doc = {
       id, type: s.idPrefix, process: s.process,
       title: s.label, version: '1.0', status: 'Draft',
+      folder: targetFolder,
       created: new Date().toISOString().slice(0, 10),
       upstream: [], downstream: [],
       content: { title: s.label, version: '1.0', status: 'Draft' },
