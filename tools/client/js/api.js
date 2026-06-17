@@ -21,6 +21,7 @@ const API = (() => {
   return {
     getWorkspace:      ()       => req('GET',    '/workspace'),
     setWorkspace:      (p, id)  => req('POST',   '/workspace', { path: p, projectId: id }),
+    pickFolder:        ()       => req('GET',    '/workspace/pick-folder'),
     listDocuments:     (proc)   => req('GET',    `/documents${proc ? '?process=' + proc : ''}`),
     getDocument:       (id)     => req('GET',    `/documents/${id}`),
     createDocument:    (doc)    => req('POST',   '/documents', doc),

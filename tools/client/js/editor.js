@@ -471,6 +471,22 @@ function closeWsModal() {
   const modal = document.getElementById('wsModal');
   if (modal) modal.style.display = 'none';
 }
+
+async function pickFolderPath() {
+  const btn = document.getElementById('wsPickBtn');
+  btn.disabled = true;
+  btn.textContent = '選択中…';
+  try {
+    const { path } = await API.pickFolder();
+    if (path) document.getElementById('wsPathInput').value = path;
+  } catch (e) {
+    Utils.toast('フォルダ選択に失敗しました: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '参照...';
+  }
+}
+
 async function saveWorkspace() {
   const p  = document.getElementById('wsPathInput').value.trim();
   const id = document.getElementById('wsProjectId').value.trim();
